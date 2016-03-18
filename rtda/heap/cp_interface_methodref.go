@@ -7,7 +7,7 @@ type ConstantInterfaceMethodref struct {
 	method *Method
 }
 
-func newConstantInterfaceMethodref(cp *ConstantPool, refInfo *classfile.ConstantInterfaceMethodrefInfo) *InterfaceMethodRef {
+func newConstantInterfaceMethodref(cp *ConstantPool, refInfo *classfile.ConstantInterfaceMethodrefInfo) *ConstantInterfaceMethodref {
 	ref := &ConstantInterfaceMethodref{}
 	ref.copy(&refInfo.ConstantMemberrefInfo)
 	return ref

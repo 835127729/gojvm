@@ -9,13 +9,13 @@ type ConstantClassref struct {
 	class *Class
 }
 
-func newConstantClass(classInfo *cf.ConstantClassInfo) *ConstantClass {
-	return &ConstantClass{
+func newConstantClassref(classInfo *cf.ConstantClassInfo) *ConstantClassref {
+	return &ConstantClassref{
 		name: classInfo.Name(),
 	}
 }
 
-func (self *ConstantClass) Class() *Class {
+func (self *ConstantClassref) Class() *Class {
 	if self.class == nil {
 		self.resolve()
 	}
@@ -23,7 +23,7 @@ func (self *ConstantClass) Class() *Class {
 }
 
 // todo
-func (self *ConstantClass) resolve() {
+func (self *ConstantClassref) resolve() {
 	// load class
 	self.class = bootLoader.LoadClass(self.name)
 }

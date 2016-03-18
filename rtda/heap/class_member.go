@@ -3,7 +3,7 @@ package heap
 import "gojvm/classfile"
 
 type ClassMember struct {
-	accessFlags    uint16
+	AccessFlags
 	name           string
 	descriptor     string
 	signature      string
@@ -37,9 +37,7 @@ func (self *ClassMember) IsSynthetic() bool {
 }
 
 // getters
-func (self *ClassMember) AccessFlags() uint16 {
-	return self.accessFlags
-}
+
 func (self *ClassMember) Name() string {
 	return self.name
 }

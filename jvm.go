@@ -6,6 +6,7 @@ import (
 	"gojvm/classpath"
 	"gojvm/cmdline"
 	"gojvm/options"
+	"gojvm/rtda/heap"
 	"os"
 	"runtime/pprof"
 )
@@ -23,13 +24,7 @@ func startJVM(cmd *cmdline.Command) {
 	options.InitOptions(cmd.Options())
 
 	cp := classpath.Parse(cmd.Options().Classpath())
-	_, classData, _ := cp.ReadClass("HelloWorld")
-	cf, err := classfile.Parse(classData)
-	if err != nil {
-		panic("failed to parse class file: " + "!" + err.Error())
-	}
-	cf.ToString()
-	//heap.InitBootLoader(cp)
+	heap.InitBootLoader(cp)
 	/*
 		Xcpuprofile := cmd.Options().Xcpuprofile
 		if Xcpuprofile != "" {

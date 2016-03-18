@@ -1,5 +1,9 @@
 package heap
 
+import (
+	cf "gojvm/classfile"
+)
+
 type ConstantFieldref struct {
 	ConstantMemberref
 	field *Field

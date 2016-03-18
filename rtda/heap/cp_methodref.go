@@ -1,13 +1,11 @@
 package heap
 
-import "gojvm/classfile"
-
 type ConstantMethodref struct {
-	MemberRef
+	ConstantMemberref
 	method *Method
 }
 
-func newConstantMethodref(cp *ConstantPool, refInfo *classfile.ConstantMethodrefInfo) *MethodRef {
+func newConstantMethodref(cp *ConstantPool, refInfo *classfile.ConstantMethodrefInfo) *ConstantMethodref {
 	ref := &ConstantMethodref{}
 	ref.copy(&refInfo.ConstantMemberrefInfo)
 	return ref

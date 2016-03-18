@@ -2,7 +2,7 @@ package heap
 
 import (
 	"gojvm/classfile"
-	"strings"
+	"gojvm/classpath"
 )
 
 const (
@@ -25,7 +25,8 @@ var (
 )
 
 type ClassLoader struct {
-	classMap map[string]*Class
+	classPath *classpath.ClassPath
+	classMap  map[string]*Class
 }
 
 func InitBootLoader(cp *classpath.ClassPath) {
@@ -43,11 +44,11 @@ func (self *ClassLoader) loadClass(className string) *Class {
 	if class, ok := self.classMap[className]; ok {
 		return class
 	}
-	if name[0] != '[' {
-		return self.reallyLoadClass(name)
+	if className[0] != '[' {
+		return self.reallyLoadClass(className)
 	} else {
 		// array class
-		return self.loadArrayClass(name)
+		return self.loadArrayClass(className)
 	}
 }
 
