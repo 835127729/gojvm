@@ -1,8 +1,10 @@
 package heap
 
 import (
+	"fmt"
 	"gojvm/classfile"
 	"gojvm/classpath"
+	"gojvm/options"
 )
 
 const (
@@ -40,7 +42,7 @@ func InitBootLoader(cp *classpath.ClassPath) {
 func (self *ClassLoader) _init() {
 }
 
-func (self *ClassLoader) loadClass(className string) *Class {
+func (self *ClassLoader) LoadClass(className string) *Class {
 	if class, ok := self.classMap[className]; ok {
 		return class
 	}
@@ -53,13 +55,15 @@ func (self *ClassLoader) loadClass(className string) *Class {
 }
 
 func (self *ClassLoader) loadArrayClass(className string) *Class {
-	class := &Class{name: className}
-	class.superClass = _jlObjectClass
-	class.interfaces = []*Class{_jlCloneableClass, _ioSerializableClass}
-	class.jClass = _jlClassClass.NewObj()
-	class.jClass.extra = class
-	createVtable(class)
-	class.MarkFullyInitialized()
+	class := &Class{
+		AccessFlags: AccessFlags{ACC_PUBLIC}, // todo
+		name:        className,
+		superClass:  self.LoadClass("java/lang/Object"),
+		interfaces: []*Class{
+			self.LoadClass("java/lang/Cloneable"),
+			self.LoadClass("java/io/Serializable"),
+		},
+	}
 	self.classMap[className] = class
 	return class
 }
@@ -87,18 +91,20 @@ func (self *ClassLoader) readClassData(name string) (classpath.Entry, []byte) {
 
 func (self *ClassLoader) _loadClass(name string, data []byte) *Class {
 	class := self.parseClassData(name, data)
-	self.resolveSuperClass(class)
-	self.resolveInterfaces(class)
-	calcStaticFieldSlotIds(class)
-	calcInstanceFieldSlotIds(class)
-	createVtable(class)
-	prepare(class)
+	/*
+		self.resolveSuperClass(class)
+		self.resolveInterfaces(class)
+		calcStaticFieldSlotIds(class)
+		calcInstanceFieldSlotIds(class)
+		createVtable(class)
+		prepare(class)
+	*/
 	// todo
 	//class.classLoader = self
 	self.classMap[name] = class
 
 	if _jlClassClass != nil {
-		class.jClass = _jlClassClass.NewObj()
+		class.jClass = _jlClassClass.NewObject()
 		class.jClass.extra = class
 	}
 

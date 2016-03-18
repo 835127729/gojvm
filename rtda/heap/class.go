@@ -12,9 +12,9 @@ type Class struct {
 	interfaceNames []string
 	fields         []*Field
 	methods        []*Method
-	//jClass         *Object // java.lang.Class instance
-	superClass *Class
-	interfaces []*Class
+	jClass         *Object // java.lang.Class instance
+	superClass     *Class
+	interfaces     []*Class
 }
 
 func newClass(cf *classfile.ClassFile) *Class {
@@ -28,6 +28,34 @@ func newClass(cf *classfile.ClassFile) *Class {
 	class.methods = newMethods(class, cf.Methods())
 	//class.sourceFile = getSourceFile(cf)
 	return class
+}
+
+func (self *Class) NewObject() *Object {
+	return newObject(self)
+}
+
+func (self *Class) IsSuperClassOf(son *Class) bool {
+	for son.superClass != nil {
+		if son.superClass == self {
+			return true
+		}
+	}
+	return false
+}
+
+func (self *Class) getField(name, descriptor string, isStatic bool) *Field {
+	for k := self; k != nil; k = k.superClass {
+		for _, field := range k.fields {
+			if field.IsStatic() == isStatic &&
+				field.name == name &&
+				field.descriptor == descriptor {
+
+				return field
+			}
+		}
+	}
+	// todo
+	return nil
 }
 
 // getters

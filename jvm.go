@@ -2,7 +2,6 @@ package main
 
 import (
 	_ "fmt"
-	"gojvm/classfile"
 	"gojvm/classpath"
 	"gojvm/cmdline"
 	"gojvm/options"

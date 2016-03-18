@@ -29,29 +29,6 @@ func (self *MethodDescriptorParser) startParams() {
 		self.causePanic()
 	}
 }
-func (self *MethodDescriptorParser) endParams() {
-	if self.readUint8() != ')' {
-		self.causePanic()
-	}
-}
-func (self *MethodDescriptorParser) finish() {
-	if self.offset != len(self.raw) {
-		self.causePanic()
-	}
-}
-
-func (self *MethodDescriptorParser) causePanic() {
-	panic("BAD descriptor: " + self.raw)
-}
-
-func (self *MethodDescriptorParser) readUint8() uint8 {
-	b := self.raw[self.offset]
-	self.offset++
-	return b
-}
-func (self *MethodDescriptorParser) unreadUint8() {
-	self.offset--
-}
 
 func (self *MethodDescriptorParser) parseParamTypes() {
 	for {
@@ -62,22 +39,6 @@ func (self *MethodDescriptorParser) parseParamTypes() {
 			break
 		}
 	}
-}
-
-func (self *MethodDescriptorParser) parseReturnType() {
-	if self.readUint8() == 'V' {
-		self.parsed.returnType = "V"
-		return
-	}
-
-	self.unreadUint8()
-	t := self.parseFieldType()
-	if t != "" {
-		self.parsed.returnType = t
-		return
-	}
-
-	self.causePanic()
 }
 
 func (self *MethodDescriptorParser) parseFieldType() string {
@@ -129,4 +90,44 @@ func (self *MethodDescriptorParser) parseArrayType() string {
 	arrEnd := self.offset
 	descriptor := self.raw[arrStart:arrEnd]
 	return descriptor
+}
+
+func (self *MethodDescriptorParser) endParams() {
+	if self.readUint8() != ')' {
+		self.causePanic()
+	}
+}
+func (self *MethodDescriptorParser) finish() {
+	if self.offset != len(self.raw) {
+		self.causePanic()
+	}
+}
+
+func (self *MethodDescriptorParser) causePanic() {
+	panic("BAD descriptor: " + self.raw)
+}
+
+func (self *MethodDescriptorParser) readUint8() uint8 {
+	b := self.raw[self.offset]
+	self.offset++
+	return b
+}
+func (self *MethodDescriptorParser) unreadUint8() {
+	self.offset--
+}
+
+func (self *MethodDescriptorParser) parseReturnType() {
+	if self.readUint8() == 'V' {
+		self.parsed.returnType = "V"
+		return
+	}
+
+	self.unreadUint8()
+	t := self.parseFieldType()
+	if t != "" {
+		self.parsed.returnType = t
+		return
+	}
+
+	self.causePanic()
 }

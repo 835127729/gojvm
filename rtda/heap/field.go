@@ -5,7 +5,6 @@ import "gojvm/classfile"
 type Field struct {
 	ClassMember
 	constValueIndex uint
-	slotId          uint
 }
 
 func newFields(class *Class, cfFields []*classfile.MemberInfo) []*Field {
@@ -24,6 +23,11 @@ func (self *Field) copyAttributes(cfField *classfile.MemberInfo) {
 	}
 }
 
+func (self *Field) ToString() {
+
+}
+
+//boolean
 func (self *Field) IsVolatile() bool {
 	return 0 != self.accessFlags&ACC_VOLATILE
 }
@@ -37,15 +41,7 @@ func (self *Field) IsEnum() bool {
 func (self *Field) ConstValueIndex() uint {
 	return self.constValueIndex
 }
-func (self *Field) SlotId() uint {
-	return self.slotId
-}
+
 func (self *Field) isLongOrDouble() bool {
 	return self.descriptor == "J" || self.descriptor == "D"
-}
-
-// reflection
-func (self *Field) Type() *Class {
-	className := toClassName(self.descriptor)
-	return self.class.loader.LoadClass(className)
 }

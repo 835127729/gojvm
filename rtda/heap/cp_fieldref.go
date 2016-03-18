@@ -1,7 +1,9 @@
 package heap
 
 import (
+	"fmt"
 	cf "gojvm/classfile"
+	"gojvm/jutil"
 )
 
 type ConstantFieldref struct {
@@ -21,21 +23,19 @@ func (self *ConstantFieldref) String() string {
 }
 
 func (self *ConstantFieldref) InstanceField() *Field {
-	if self.field != nil {
-		return self.field
+	if self.field == nil {
+		self.resolveInstanceField()
 	}
-	self.resolveInstanceField()
+	return self.field
 }
 
 func (self *ConstantFieldref) resolveInstanceField() {
 	fromClass := bootLoader.LoadClass(self.className)
 
-	for class := fromClass; class != nil; class = class.superClass {
-		field := class.getField(self.name, self.descriptor, false)
-		if field != nil {
-			self.field = field
-			return
-		}
+	field := fromClass.getField(self.name, self.descriptor, false)
+	if field != nil {
+		self.field = field
+		return
 	}
 
 	// todo
@@ -52,32 +52,12 @@ func (self *ConstantFieldref) StaticField() *Field {
 func (self *ConstantFieldref) resolveStaticField() {
 	fromClass := bootLoader.LoadClass(self.className)
 
-	for class := fromClass; class != nil; class = class.superClass {
-		field := class.getField(self.name, self.descriptor, true)
-		if field != nil {
-			self.field = field
-			return
-		}
-		if self._findInterfaceField(class) {
-			return
-		}
+	field := fromClass.getField(self.name, self.descriptor, true)
+	if field != nil {
+		self.field = field
+		return
 	}
 
 	// todo
-	jutil.Panicf("static field not found! %v", self)
-}
-
-func (self *ConstantFieldref) _findInterfaceField(class *Class) bool {
-	for _, iface := range class.interfaces {
-		for _, f := range iface.fields {
-			if f.name == self.name && f.descriptor == self.descriptor {
-				self.field = f
-				return true
-			}
-		}
-		if self._findInterfaceField(iface) {
-			return true
-		}
-	}
-	return false
+	jutil.Panicf("instance field not found! %v", self)
 }

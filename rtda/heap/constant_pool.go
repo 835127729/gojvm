@@ -1,7 +1,7 @@
 package heap
 
 import (
-	"gojvm/classfile"
+	cf "gojvm/classfile"
 )
 
 type Constant interface{}
@@ -11,14 +11,13 @@ type ConstantPool struct {
 	constants []Constant
 }
 
-func newConstantPool(class *Class, cf *classfile.ConstantPool) *ConstantPool {
-	cpInfos := cf.Infos()
-	constants := make([]Constant, len(cpInfos))
-	constantPool := &ConstantPool{
-		class:     class,
-		constants: constants,
-	}
-	for i := 1; i < len(cpInfos); i++ {
+func newConstantPool(class *Class, cfCp *cf.ConstantPool) *ConstantPool {
+	cpInfos := cfCp.Infos()
+	cpCount := len(cpInfos)
+	consts := make([]Constant, cpCount)
+	rtCp := &ConstantPool{class, consts}
+
+	for i := 1; i < cpCount; i++ {
 		cpInfo := cpInfos[i]
 		switch cpInfo.(type) {
 		case *cf.ConstantIntegerInfo:
@@ -56,7 +55,7 @@ func newConstantPool(class *Class, cf *classfile.ConstantPool) *ConstantPool {
 		}
 	}
 
-	return constantPool
+	return rtCp
 }
 
 func (self *ConstantPool) GetConstant(index uint) Constant {

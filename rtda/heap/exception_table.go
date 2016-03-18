@@ -39,7 +39,7 @@ func (self ExceptionTable) findExceptionHandler(exClass *Class, pc int) *Excepti
 			if handler.catchType == nil {
 				return handler
 			}
-			catchClass := handler.catchType.ResolvedClass()
+			catchClass := handler.catchType.resolveClass()
 			if catchClass == exClass || catchClass.IsSuperClassOf(exClass) {
 				return handler
 			}
