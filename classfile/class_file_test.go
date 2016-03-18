@@ -1,23 +1,40 @@
-package cmdline
+package classfile
 
 import (
+	"gojvm/classpath"
+	"gojvm/cmdline"
+	"gojvm/options"
 	"os"
+	"runtime/pprof"
 	"testing"
 )
 
-func Test_ParseOptions(t *testing.T) {
-	osArgs := os.Args
-	t.Log("原命令:", osArgs)
-	argReader := &ArgReader{osArgs[2:]}
-	cmd := &Command{
-		options: parseOptions(argReader),
-		class:   argReader.removeFirst(),
-		args:    argReader.args,
+func Test_Classfile(t *testing.T) {
+	cmd, err := cmdline.ParseCommand(os.Args[1:])
+	if err != nil {
+		cmdline.PrintUsage()
+	} else {
+		startJVM(cmd)
 	}
-	t.Log("解析后:")
-	t.Log("classpath:", cmd.options.Classpath())
-	t.Log("VerboseClass:", cmd.options.VerboseClass())
-	t.Log("Xcpuprofile:", cmd.options.Xcpuprofile)
-	t.Log("Xss:", cmd.options.Xss)
-	t.Log("XuseJavaHome:", cmd.options.XuseJavaHome)
+}
+
+func startJVM(cmd *cmdline.Command) {
+	Xcpuprofile := cmd.Options().Xcpuprofile
+	if Xcpuprofile != "" {
+		f, err := os.Create(Xcpuprofile)
+		if err != nil {
+			panic(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
+	options.InitOptions(cmd.Options())
+
+	cp := classpath.Parse(cmd.Options().Classpath())
+	_, classData, _ := cp.ReadClass("HelloWorld")
+	cf, err := Parse(classData)
+	if err != nil {
+		panic("failed to parse class file: " + "!" + err.Error())
+	}
+	cf.ToString()
 }

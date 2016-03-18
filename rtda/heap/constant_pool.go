@@ -36,7 +36,7 @@ func newConstantPool(class *Class, cf *classfile.ConstantPool) *ConstantPool {
 		case *cf.ConstantUtf8Info:
 			consts[i] = newConstantUtf8(cpInfo.(*cf.ConstantUtf8Info))
 		case *cf.ConstantClassInfo:
-			consts[i] = newConstantClass(cpInfo.(*cf.ConstantClassInfo))
+			consts[i] = newConstantClassref(cpInfo.(*cf.ConstantClassInfo))
 		case *cf.ConstantFieldrefInfo:
 			consts[i] = newConstantFieldref(cpInfo.(*cf.ConstantFieldrefInfo))
 		case *cf.ConstantMethodrefInfo:

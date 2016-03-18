@@ -1,7 +1,6 @@
 package classpath
 
 import (
-	"fmt"
 	"os"
 	"strings"
 )
@@ -16,7 +15,7 @@ type Entry interface {
 }
 
 func newEntry(path string) Entry {
-	fmt.Println("path:", path)
+
 	if strings.Contains(path, pathListSeparator) {
 		return newCompositeEntry(path)
 	}

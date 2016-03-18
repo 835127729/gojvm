@@ -1,7 +1,6 @@
 package classpath
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -15,7 +14,7 @@ type ClassPath struct {
 func Parse(cpOption string) *ClassPath {
 	cp := &ClassPath{}
 	cp.parseBootAndExtClassPath()
-	fmt.Println("userpath")
+
 	cp.parseUserClassPath(cpOption)
 	return cp
 }
@@ -34,7 +33,7 @@ func (self *ClassPath) parseUserClassPath(cpOption string) {
 	if cpOption == "" {
 		cpOption = "."
 	}
-	fmt.Println("cpoption", cpOption)
+
 	self.addEntry(newEntry(cpOption))
 }
 

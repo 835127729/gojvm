@@ -1,7 +1,6 @@
 package classpath
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,7 +12,6 @@ type WildcardEntry struct {
 
 func newWildcardEntry(path string) *WildcardEntry {
 	baseDir := path[:len(path)-1] // remove *
-	fmt.Println("basedir:", baseDir)
 	entry := &WildcardEntry{}
 
 	walkFn := func(path string, info os.FileInfo, err error) error {

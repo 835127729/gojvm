@@ -4,7 +4,7 @@ import (
 	cf "gojvm/classfile"
 )
 
-type ConstantClass struct {
+type ConstantClassref struct {
 	name  string
 	class *Class
 }
