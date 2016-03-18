@@ -1,6 +1,7 @@
 package heap
 
 import (
+	"fmt"
 	"gojvm/classfile"
 )
 
@@ -30,6 +31,14 @@ func newClass(cf *classfile.ClassFile) *Class {
 	return class
 }
 
+func (self *Class) ToString() {
+	fmt.Println("Class:")
+	fmt.Println("name:", self.name)
+	fmt.Println("superClassName:", self.superClassName)
+	fmt.Println("interfaceNames:", self.interfaceNames)
+	self.constantPool.ToString()
+}
+
 func (self *Class) NewObject() *Object {
 	return newObject(self)
 }
@@ -51,6 +60,21 @@ func (self *Class) getField(name, descriptor string, isStatic bool) *Field {
 				field.descriptor == descriptor {
 
 				return field
+			}
+		}
+	}
+	// todo
+	return nil
+}
+
+func (self *Class) getMethod(name, descriptor string, isStatic bool) *Method {
+	for k := self; k != nil; k = k.superClass {
+		for _, method := range k.methods {
+			if method.IsStatic() == isStatic &&
+				method.name == name &&
+				method.descriptor == descriptor {
+
+				return method
 			}
 		}
 	}

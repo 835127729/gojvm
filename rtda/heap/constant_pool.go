@@ -1,6 +1,7 @@
 package heap
 
 import (
+	"fmt"
 	cf "gojvm/classfile"
 )
 
@@ -56,6 +57,13 @@ func newConstantPool(class *Class, cfCp *cf.ConstantPool) *ConstantPool {
 	}
 
 	return rtCp
+}
+
+func (self *ConstantPool) ToString() {
+	fmt.Println("constantPool:")
+	for _, con := range self.constants {
+		fmt.Println(con)
+	}
 }
 
 func (self *ConstantPool) GetConstant(index uint) Constant {

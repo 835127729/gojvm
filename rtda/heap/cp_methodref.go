@@ -2,6 +2,7 @@ package heap
 
 import (
 	"gojvm/classfile"
+	"gojvm/jutil"
 )
 
 type ConstantMethodref struct {
@@ -24,5 +25,13 @@ func (self *ConstantMethodref) ResolvedMethod() *Method {
 
 // jvms8 5.4.3.3
 func (self *ConstantMethodref) resolveMethodRef() {
+	fromClass := bootLoader.LoadClass(self.className)
+	method := fromClass.getMethod(self.name, self.descriptor, false)
+	if method != nil {
+		self.method = method
+		return
+	}
 
+	// todo
+	jutil.Panicf("instance field not found! %v", self)
 }
