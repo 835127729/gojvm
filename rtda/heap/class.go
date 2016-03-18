@@ -82,6 +82,10 @@ func (self *Class) getMethod(name, descriptor string, isStatic bool) *Method {
 	return nil
 }
 
+func (self *Class) GetMainMethod() *Method {
+	return self.getMethod("main", "([Ljava/lang/String;)V", true)
+}
+
 // getters
 func (self *Class) Name() string {
 	return self.name
