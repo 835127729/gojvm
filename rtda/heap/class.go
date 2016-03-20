@@ -106,3 +106,7 @@ func (self *Class) SuperClass() *Class {
 func (self *Class) Interfaces() []*Class {
 	return self.interfaces
 }
+
+func (self *Class) JClass() *Object {
+	return self.jClass
+}

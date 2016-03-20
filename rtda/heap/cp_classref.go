@@ -15,7 +15,7 @@ func newConstantClassref(classInfo *cf.ConstantClassInfo) *ConstantClassref {
 	}
 }
 
-func (self *ConstantClassref) resolveClass() *Class {
+func (self *ConstantClassref) ResolveClass() *Class {
 	if self.class == nil {
 		self.resolve()
 	}
