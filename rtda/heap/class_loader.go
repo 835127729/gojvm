@@ -39,11 +39,49 @@ func InitBootLoader(cp *classpath.ClassPath) {
 	bootLoader._init()
 }
 
-func GetBootLoader() *ClassLoader {
-	return bootLoader
+func (self *ClassLoader) _init() {
+	self.loadBasicClasses()
+	self.loadPrimitiveClasses()
+	self.loadPrimitiveArrayClasses()
 }
 
-func (self *ClassLoader) _init() {
+//加载一些基础类
+func (self *ClassLoader) loadBasicClasses() {
+	_jlObjectClass = self.LoadClass(jlObjectClassName)
+	_jlClassClass = self.LoadClass(jlClassClassName)
+	for _, class := range self.classMap {
+		if class.jClass == nil {
+			class.jClass = _jlClassClass.NewObject()
+		}
+	}
+	_jlCloneableClass = self.LoadClass(jlCloneableClassName)
+	_ioSerializableClass = self.LoadClass(ioSerializableClassName)
+	_jlThreadClass = self.LoadClass(jlThreadClassName)
+	_jlStringClass = self.LoadClass(jlStringClassName)
+}
+
+//加载基本类型
+func (self *ClassLoader) loadPrimitiveClasses() {
+	for _, primitiveType := range PrimitiveTypes {
+		self.LoadClass(primitiveType.WrapperClassName)
+	}
+}
+
+//加载基本类型数组
+func (self *ClassLoader) loadPrimitiveArrayClasses() {
+	for _, primitiveType := range PrimitiveTypes {
+		class := &Class{
+			AccessFlags: AccessFlags{ACC_PUBLIC},
+			name:        primitiveType.ArrayClassName,
+			superClass:  self.LoadClass("java/lang/Object"),
+			interfaces: []*Class{
+				self.LoadClass("java/lang/Cloneable"),
+				self.LoadClass("java/io/Serializable"),
+			},
+		}
+		class.jClass = _jlClassClass.NewObject()
+		self.classMap[primitiveType.ArrayClassName] = class
+	}
 }
 
 func (self *ClassLoader) LoadClass(className string) *Class {
@@ -58,9 +96,11 @@ func (self *ClassLoader) LoadClass(className string) *Class {
 	}
 }
 
+//加载数组
 func (self *ClassLoader) loadArrayClass(className string) *Class {
+	componentClass := self.LoadClass(getComponentClassName(className))
 	class := &Class{
-		AccessFlags: AccessFlags{ACC_PUBLIC}, // todo
+		AccessFlags: AccessFlags{componentClass.AccessFlags.GetAccessFlags()},
 		name:        className,
 		superClass:  self.LoadClass("java/lang/Object"),
 		interfaces: []*Class{
@@ -68,10 +108,12 @@ func (self *ClassLoader) loadArrayClass(className string) *Class {
 			self.LoadClass("java/io/Serializable"),
 		},
 	}
+	class.jClass = _jlClassClass.NewObject()
 	self.classMap[className] = class
 	return class
 }
 
+//加载非数组
 func (self *ClassLoader) reallyLoadClass(name string) *Class {
 	cpEntry, data := self.readClassData(name)
 	class := self._loadClass(name, data)
@@ -93,28 +135,16 @@ func (self *ClassLoader) readClassData(name string) (classpath.Entry, []byte) {
 	return cpEntry, classData
 }
 
+//步骤
 func (self *ClassLoader) _loadClass(name string, data []byte) *Class {
 	class := self.parseClassData(name, data)
-	/*
-		self.resolveSuperClass(class)
-		self.resolveInterfaces(class)
-		calcStaticFieldSlotIds(class)
-		calcInstanceFieldSlotIds(class)
-		createVtable(class)
-		prepare(class)
-	*/
-	// todo
-	//class.classLoader = self
-	self.classMap[name] = class
-
-	if _jlClassClass != nil {
-		class.jClass = _jlClassClass.NewObject()
-		class.jClass.extra = class
-	}
-
+	link(class)
+	prepare(class)
+	//createVtable(class)
 	return class
 }
 
+//加载
 func (self *ClassLoader) parseClassData(name string, data []byte) *Class {
 	cf, err := classfile.Parse(data)
 	if err != nil {
@@ -123,5 +153,112 @@ func (self *ClassLoader) parseClassData(name string, data []byte) *Class {
 		panic("failed to parse class file: " + name + "!" + err.Error())
 	}
 
-	return newClass(cf)
+	class := newClass(cf)
+	self.classMap[name] = class
+	if _jlClassClass != nil {
+		class.jClass = _jlClassClass.NewObject()
+	}
+	return class
+}
+
+//链接
+func link(class *Class) {
+	resolveSuperClass(class)
+	resolveInterfaces(class)
+}
+
+// jvms 5.4.3.1
+func resolveSuperClass(class *Class) {
+	if class.name != "java/lang/Object" {
+		class.superClass = bootLoader.LoadClass(class.superClassName)
+	}
+}
+func resolveInterfaces(class *Class) {
+	interfaceCount := len(class.interfaceNames)
+	if interfaceCount > 0 {
+		class.interfaces = make([]*Class, interfaceCount)
+		for i, interfaceName := range class.interfaceNames {
+			class.interfaces[i] = bootLoader.LoadClass(interfaceName)
+		}
+	}
+}
+
+//准备
+func prepare(class *Class) {
+	calcStaticFieldSlotIds(class)
+	calcInstanceFieldSlotIds(class)
+	allocAndInitStaticVars(class)
+}
+
+func calcInstanceFieldSlotIds(class *Class) {
+	slotId := uint(0)
+	if class.superClass != nil {
+		slotId = class.superClass.instanceSlotCount
+	}
+	for _, field := range class.fields {
+		if !field.IsStatic() {
+			field.slotId = slotId
+			slotId++
+			if field.isLongOrDouble() {
+				slotId++
+			}
+		}
+	}
+	class.instanceSlotCount = slotId
+}
+
+func calcStaticFieldSlotIds(class *Class) {
+	slotId := uint(0)
+	for _, field := range class.fields {
+		if field.IsStatic() {
+			field.slotId = slotId
+			slotId++
+			if field.isLongOrDouble() {
+				slotId++
+			}
+		}
+	}
+	class.staticSlotCount = slotId
+}
+
+func allocAndInitStaticVars(class *Class) {
+	class.staticVars = newSlots(class.staticSlotCount)
+	for _, field := range class.fields {
+		if field.IsStatic() && field.IsFinal() {
+			initStaticFinalVar(class, field)
+		}
+	}
+}
+
+func initStaticFinalVar(class *Class, field *Field) {
+	vars := class.staticVars
+	cp := class.constantPool
+	cpIndex := field.ConstValueIndex()
+	slotId := field.SlotId()
+
+	if cpIndex > 0 {
+		switch field.Descriptor() {
+		case "Z", "B", "C", "S", "I":
+			val := cp.GetConstant(cpIndex).(int32)
+			vars.SetInt(slotId, val)
+		case "J":
+			val := cp.GetConstant(cpIndex).(int64)
+			vars.SetLong(slotId, val)
+		case "F":
+			val := cp.GetConstant(cpIndex).(float32)
+			vars.SetFloat(slotId, val)
+		case "D":
+			val := cp.GetConstant(cpIndex).(float64)
+			vars.SetDouble(slotId, val)
+		case "Ljava/lang/String;":
+			goStr := cp.GetConstant(cpIndex).(string)
+			jStr := JString(bootLoader, goStr)
+			vars.SetRef(slotId, jStr)
+		}
+	}
+}
+
+//getter
+func GetBootLoader() *ClassLoader {
+	return bootLoader
 }

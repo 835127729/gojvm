@@ -2,7 +2,7 @@ package heap
 
 import (
 	"gojvm/classfile"
-	"gojvm/jutil"
+	_ "gojvm/jutil"
 )
 
 type ConstantMethodref struct {
@@ -16,22 +16,26 @@ func newConstantMethodref(refInfo *classfile.ConstantMethodrefInfo) *ConstantMet
 	return ref
 }
 
-func (self *ConstantMethodref) ResolvedMethod() *Method {
-	if self.method == nil {
-		self.resolveMethodRef()
+// jvms8 5.4.3.3
+func (self *ConstantMethodref) ResolveMethod() *Method {
+	c := bootLoader.LoadClass(self.className)
+	if c.IsInterface() {
+		panic("java.lang.IncompatibleClassChangeError")
 	}
-	return self.method
+
+	method := lookupMethod(c, self.name, self.descriptor)
+	if method == nil {
+		panic("java.lang.NoSuchMethodError")
+	}
+
+	self.method = method
+	return method
 }
 
-// jvms8 5.4.3.3
-func (self *ConstantMethodref) resolveMethodRef() {
-	fromClass := bootLoader.LoadClass(self.className)
-	method := fromClass.getMethod(self.name, self.descriptor, false)
-	if method != nil {
-		self.method = method
-		return
+func lookupMethod(class *Class, name, descriptor string) *Method {
+	method := LookupMethodInClass(class, name, descriptor)
+	if method == nil {
+		method = lookupMethodInInterfaces(class.interfaces, name, descriptor)
 	}
-
-	// todo
-	jutil.Panicf("instance field not found! %v", self)
+	return method
 }

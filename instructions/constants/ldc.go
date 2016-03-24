@@ -31,9 +31,9 @@ func _ldc(frame *rtda.Frame, index uint) {
 	case string:
 		internedStr := heap.JString(class.Loader(), c.(string))
 		stack.PushRef(internedStr)
-	case *heap.ClassRef:
+	case *heap.ConstantClassref:
 		classRef := c.(*heap.ConstantClassref)
-		classObj := classRef.ResolvedClass().JClass()
+		classObj := classRef.ResolveClass().JClass()
 		stack.PushRef(classObj)
 	// case MethodType, MethodHandle
 	default:

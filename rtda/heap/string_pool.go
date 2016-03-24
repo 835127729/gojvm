@@ -1,6 +1,8 @@
 package heap
 
-import "unicode/utf16"
+import (
+	"unicode/utf16"
+)
 
 var internedStrings = map[string]*Object{}
 

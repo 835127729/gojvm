@@ -31,7 +31,8 @@ func startJVM(cmd *cmdline.Command) {
 	mainThread := createMainThread(mainClassName, cmd.Args())
 	mainMethod := mainClass.GetMainMethod()
 	fmt.Println(mainMethod.Name())
-	mainThread.NewFrame(mainMethod)
+	mainThread.PushFrame(mainThread.NewFrame(mainMethod))
+	interpret(mainThread, true)
 }
 
 func createMainThread(className string, args []string) *rtda.Thread {

@@ -5,6 +5,7 @@ import "gojvm/classfile"
 type Field struct {
 	ClassMember
 	constValueIndex uint
+	slotId          uint
 }
 
 func newFields(class *Class, cfFields []*classfile.MemberInfo) []*Field {
@@ -37,7 +38,9 @@ func (self *Field) IsTransient() bool {
 func (self *Field) IsEnum() bool {
 	return 0 != self.accessFlags&ACC_ENUM
 }
-
+func (self *Field) SlotId() uint {
+	return self.slotId
+}
 func (self *Field) ConstValueIndex() uint {
 	return self.constValueIndex
 }

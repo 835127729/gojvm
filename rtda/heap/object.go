@@ -1,5 +1,9 @@
 package heap
 
+import (
+	"fmt"
+)
+
 type Object struct {
 	class *Class
 	data  interface{} // Slots for Object, []int32 for int[] ...
@@ -12,6 +16,15 @@ func newObject(class *Class) *Object {
 		class: class,
 		data:  newSlots(class.instanceSlotCount),
 	}
+}
+
+func (self *Object) IsInstanceOf(class *Class) bool {
+	return class.IsAssignableFrom(self.class)
+}
+
+func (self *Object) String() string {
+	return fmt.Sprintf("{Object@%p class:%v extra:%v}",
+		self, self.class, self.extra)
 }
 
 // getters & setters

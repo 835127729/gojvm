@@ -1,3 +1,5 @@
+package constants
+
 import "gojvm/instructions/base"
 import "gojvm/rtda"
 
