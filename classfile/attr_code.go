@@ -19,12 +19,12 @@ Code_attribute {
 }
 */
 type CodeAttribute struct {
-	cp             *ConstantPool
+	cp             ConstantPool
 	maxStack       uint16
 	maxLocals      uint16
 	code           []byte
 	exceptionTable []*ExceptionTableEntry
-	AttributeTable
+	attributes     []AttributeInfo
 }
 
 func (self *CodeAttribute) readInfo(reader *ClassReader) {
@@ -47,6 +47,16 @@ func (self *CodeAttribute) Code() []byte {
 }
 func (self *CodeAttribute) ExceptionTable() []*ExceptionTableEntry {
 	return self.exceptionTable
+}
+
+func (self *CodeAttribute) LineNumberTableAttribute() *LineNumberTableAttribute {
+	for _, attrInfo := range self.attributes {
+		switch attrInfo.(type) {
+		case *LineNumberTableAttribute:
+			return attrInfo.(*LineNumberTableAttribute)
+		}
+	}
+	return nil
 }
 
 type ExceptionTableEntry struct {

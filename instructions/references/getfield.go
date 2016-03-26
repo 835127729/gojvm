@@ -9,8 +9,8 @@ type GET_FIELD struct{ base.Index16Instruction }
 
 func (self *GET_FIELD) Execute(frame *rtda.Frame) {
 	cp := frame.Method().Class().ConstantPool()
-	fieldRef := cp.GetConstant(self.Index).(*heap.ConstantFieldref)
-	field := fieldRef.InstanceField()
+	fieldRef := cp.GetConstant(self.Index).(*heap.FieldRef)
+	field := fieldRef.ResolvedField()
 
 	if field.IsStatic() {
 		panic("java.lang.IncompatibleClassChangeError")

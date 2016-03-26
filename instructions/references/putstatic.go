@@ -11,8 +11,8 @@ func (self *PUT_STATIC) Execute(frame *rtda.Frame) {
 	currentMethod := frame.Method()
 	currentClass := currentMethod.Class()
 	cp := currentClass.ConstantPool()
-	fieldRef := cp.GetConstant(self.Index).(*heap.ConstantFieldref)
-	field := fieldRef.StaticField()
+	fieldRef := cp.GetConstant(self.Index).(*heap.FieldRef)
+	field := fieldRef.ResolvedField()
 	class := field.Class()
 	if !class.InitStarted() {
 		frame.RevertNextPC()

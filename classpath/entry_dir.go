@@ -1,9 +1,7 @@
 package classpath
 
-import (
-	"io/ioutil"
-	"path/filepath"
-)
+import "io/ioutil"
+import "path/filepath"
 
 type DirEntry struct {
 	absDir string
@@ -17,13 +15,10 @@ func newDirEntry(path string) *DirEntry {
 	return &DirEntry{absDir}
 }
 
-func (self *DirEntry) readClass(className string) (Entry, []byte, error) {
+func (self *DirEntry) readClass(className string) ([]byte, Entry, error) {
 	fileName := filepath.Join(self.absDir, className)
 	data, err := ioutil.ReadFile(fileName)
-	if err != nil {
-		return self, nil, err
-	}
-	return self, data, nil
+	return data, self, err
 }
 
 func (self *DirEntry) String() string {

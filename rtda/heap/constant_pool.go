@@ -1,72 +1,63 @@
 package heap
 
-import (
-	"fmt"
-	cf "gojvm/classfile"
-)
+import "fmt"
+import "gojvm/classfile"
 
 type Constant interface{}
 
 type ConstantPool struct {
-	class     *Class
-	constants []Constant
+	class  *Class
+	consts []Constant
 }
 
-func newConstantPool(class *Class, cfCp *cf.ConstantPool) *ConstantPool {
-	cpInfos := cfCp.Infos()
-	cpCount := len(cpInfos)
+func newConstantPool(class *Class, cfCp classfile.ConstantPool) *ConstantPool {
+	cpCount := len(cfCp)
 	consts := make([]Constant, cpCount)
 	rtCp := &ConstantPool{class, consts}
 
 	for i := 1; i < cpCount; i++ {
-		cpInfo := cpInfos[i]
+		cpInfo := cfCp[i]
 		switch cpInfo.(type) {
-		case *cf.ConstantIntegerInfo:
-			consts[i] = cpInfo.(*cf.ConstantIntegerInfo).Value()
-		case *cf.ConstantFloatInfo:
-			consts[i] = cpInfo.(*cf.ConstantFloatInfo).Value()
-		case *cf.ConstantLongInfo:
-			consts[i] = cpInfo.(*cf.ConstantLongInfo).Value()
+		case *classfile.ConstantIntegerInfo:
+			intInfo := cpInfo.(*classfile.ConstantIntegerInfo)
+			consts[i] = intInfo.Value()
+		case *classfile.ConstantFloatInfo:
+			floatInfo := cpInfo.(*classfile.ConstantFloatInfo)
+			consts[i] = floatInfo.Value()
+		case *classfile.ConstantLongInfo:
+			longInfo := cpInfo.(*classfile.ConstantLongInfo)
+			consts[i] = longInfo.Value()
 			i++
-		case *cf.ConstantDoubleInfo:
-			consts[i] = cpInfo.(*cf.ConstantDoubleInfo).Value()
+		case *classfile.ConstantDoubleInfo:
+			doubleInfo := cpInfo.(*classfile.ConstantDoubleInfo)
+			consts[i] = doubleInfo.Value()
 			i++
-		case *cf.ConstantStringInfo:
-			consts[i] = cpInfo.(*cf.ConstantStringInfo).String()
-		case *cf.ConstantUtf8Info:
-			consts[i] = newConstantUtf8(cpInfo.(*cf.ConstantUtf8Info))
-		case *cf.ConstantClassInfo:
-			consts[i] = newConstantClassref(cpInfo.(*cf.ConstantClassInfo))
-		case *cf.ConstantFieldrefInfo:
-			consts[i] = newConstantFieldref(cpInfo.(*cf.ConstantFieldrefInfo))
-		case *cf.ConstantMethodrefInfo:
-			consts[i] = newConstantMethodref(cpInfo.(*cf.ConstantMethodrefInfo))
-		case *cf.ConstantInterfaceMethodrefInfo:
-			consts[i] = newConstantInterfaceMethodref(cpInfo.(*cf.ConstantInterfaceMethodrefInfo))
-		case *cf.ConstantInvokeDynamicInfo:
-			consts[i] = newConstantInvokeDynamic(rtCp, cpInfo.(*cf.ConstantInvokeDynamicInfo))
-		case *cf.ConstantMethodHandleInfo:
-			consts[i] = newConstantMethodHandle(cpInfo.(*cf.ConstantMethodHandleInfo))
-		case *cf.ConstantMethodTypeInfo:
-			consts[i] = newConstantMethodType(cpInfo.(*cf.ConstantMethodTypeInfo))
+		case *classfile.ConstantStringInfo:
+			stringInfo := cpInfo.(*classfile.ConstantStringInfo)
+			consts[i] = stringInfo.String()
+		case *classfile.ConstantClassInfo:
+			classInfo := cpInfo.(*classfile.ConstantClassInfo)
+			consts[i] = newClassRef(rtCp, classInfo)
+		case *classfile.ConstantFieldrefInfo:
+			fieldrefInfo := cpInfo.(*classfile.ConstantFieldrefInfo)
+			consts[i] = newFieldRef(rtCp, fieldrefInfo)
+		case *classfile.ConstantMethodrefInfo:
+			methodrefInfo := cpInfo.(*classfile.ConstantMethodrefInfo)
+			consts[i] = newMethodRef(rtCp, methodrefInfo)
+		case *classfile.ConstantInterfaceMethodrefInfo:
+			methodrefInfo := cpInfo.(*classfile.ConstantInterfaceMethodrefInfo)
+			consts[i] = newInterfaceMethodRef(rtCp, methodrefInfo)
 		default:
 			// todo
-			//fmt.Printf("%T \n", cpInfo)
-			// panic("todo")
 		}
 	}
 
 	return rtCp
 }
 
-func (self *ConstantPool) ToString() {
-	fmt.Println("constantPool:")
-	for _, con := range self.constants {
-		fmt.Println(con)
-	}
-}
-
 func (self *ConstantPool) GetConstant(index uint) Constant {
-	// todo
-	return self.constants[index]
+	if c := self.consts[index]; c != nil {
+		return c
+	}
+	panic(fmt.Sprintf("No constants at index %d", index))
 }

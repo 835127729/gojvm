@@ -11,9 +11,9 @@ type INVOKE_SPECIAL struct{ base.Index16Instruction }
 func (self *INVOKE_SPECIAL) Execute(frame *rtda.Frame) {
 	currentClass := frame.Method().Class()
 	cp := currentClass.ConstantPool()
-	methodRef := cp.GetConstant(self.Index).(*heap.ConstantMethodref)
-	resolvedMethod := methodRef.ResolveMethod()
-	resolvedClass := resolvedMethod.Class()
+	methodRef := cp.GetConstant(self.Index).(*heap.MethodRef)
+	resolvedClass := methodRef.ResolvedClass()
+	resolvedMethod := methodRef.ResolvedMethod()
 	if resolvedMethod.Name() == "<init>" && resolvedMethod.Class() != resolvedClass {
 		panic("java.lang.NoSuchMethodError")
 	}
@@ -41,7 +41,7 @@ func (self *INVOKE_SPECIAL) Execute(frame *rtda.Frame) {
 		resolvedMethod.Name() != "<init>" {
 
 		methodToBeInvoked = heap.LookupMethodInClass(currentClass.SuperClass(),
-			methodToBeInvoked.Name(), methodToBeInvoked.Descriptor())
+			methodRef.Name(), methodRef.Descriptor())
 	}
 
 	if methodToBeInvoked == nil || methodToBeInvoked.IsAbstract() {

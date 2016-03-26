@@ -8,7 +8,7 @@ SourceFile_attribute {
 }
 */
 type SourceFileAttribute struct {
-	cp              *ConstantPool
+	cp              ConstantPool
 	sourceFileIndex uint16
 }
 

@@ -1,29 +1,14 @@
 package heap
 
-import (
-	cf "gojvm/classfile"
-)
+import "gojvm/classfile"
 
-type ConstantClassref struct {
-	name  string
-	class *Class
+type ClassRef struct {
+	SymRef
 }
 
-func newConstantClassref(classInfo *cf.ConstantClassInfo) *ConstantClassref {
-	return &ConstantClassref{
-		name: classInfo.Name(),
-	}
-}
-
-func (self *ConstantClassref) ResolveClass() *Class {
-	if self.class == nil {
-		self.resolve()
-	}
-	return self.class
-}
-
-// todo
-func (self *ConstantClassref) resolve() {
-	// load class
-	self.class = bootLoader.LoadClass(self.name)
+func newClassRef(cp *ConstantPool, classInfo *classfile.ConstantClassInfo) *ClassRef {
+	ref := &ClassRef{}
+	ref.cp = cp
+	ref.className = classInfo.Name()
+	return ref
 }

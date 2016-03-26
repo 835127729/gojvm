@@ -8,7 +8,7 @@ type ExceptionHandler struct {
 	startPc   int
 	endPc     int
 	handlerPc int
-	catchType *ConstantClassref
+	catchType *ClassRef
 }
 
 func newExceptionTable(entries []*classfile.ExceptionTableEntry, cp *ConstantPool) ExceptionTable {
@@ -25,11 +25,11 @@ func newExceptionTable(entries []*classfile.ExceptionTableEntry, cp *ConstantPoo
 	return table
 }
 
-func getCatchType(index uint, cp *ConstantPool) *ConstantClassref {
+func getCatchType(index uint, cp *ConstantPool) *ClassRef {
 	if index == 0 {
 		return nil // catch all
 	}
-	return cp.GetConstant(index).(*ConstantClassref)
+	return cp.GetConstant(index).(*ClassRef)
 }
 
 func (self ExceptionTable) findExceptionHandler(exClass *Class, pc int) *ExceptionHandler {
@@ -39,7 +39,7 @@ func (self ExceptionTable) findExceptionHandler(exClass *Class, pc int) *Excepti
 			if handler.catchType == nil {
 				return handler
 			}
-			catchClass := handler.catchType.ResolveClass()
+			catchClass := handler.catchType.ResolvedClass()
 			if catchClass == exClass || catchClass.IsSuperClassOf(exClass) {
 				return handler
 			}

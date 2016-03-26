@@ -16,8 +16,8 @@ func (self *MULTI_ANEW_ARRAY) FetchOperands(reader *base.BytecodeReader) {
 }
 func (self *MULTI_ANEW_ARRAY) Execute(frame *rtda.Frame) {
 	cp := frame.Method().Class().ConstantPool()
-	classRef := cp.GetConstant(uint(self.index)).(*heap.ConstantClassref)
-	arrClass := classRef.ResolveClass()
+	classRef := cp.GetConstant(uint(self.index)).(*heap.ClassRef)
+	arrClass := classRef.ResolvedClass()
 
 	stack := frame.OperandStack()
 	counts := popAndCheckCounts(stack, int(self.dimensions))

@@ -19,7 +19,7 @@ func (self *INVOKE_INTERFACE) FetchOperands(reader *base.BytecodeReader) {
 
 func (self *INVOKE_INTERFACE) Execute(frame *rtda.Frame) {
 	cp := frame.Method().Class().ConstantPool()
-	methodRef := cp.GetConstant(self.index).(*heap.ConstantInterfaceMethodref)
+	methodRef := cp.GetConstant(self.index).(*heap.InterfaceMethodRef)
 	resolvedMethod := methodRef.ResolvedInterfaceMethod()
 	if resolvedMethod.IsStatic() || resolvedMethod.IsPrivate() {
 		panic("java.lang.IncompatibleClassChangeError")
@@ -29,12 +29,12 @@ func (self *INVOKE_INTERFACE) Execute(frame *rtda.Frame) {
 	if ref == nil {
 		panic("java.lang.NullPointerException") // todo
 	}
-	if !ref.Class().IsImplements(methodRef.ResolvedInterfaceMethod().Class()) {
+	if !ref.Class().IsImplements(methodRef.ResolvedClass()) {
 		panic("java.lang.IncompatibleClassChangeError")
 	}
 
 	methodToBeInvoked := heap.LookupMethodInClass(ref.Class(),
-		resolvedMethod.Name(), resolvedMethod.Descriptor())
+		methodRef.Name(), methodRef.Descriptor())
 	if methodToBeInvoked == nil || methodToBeInvoked.IsAbstract() {
 		panic("java.lang.AbstractMethodError")
 	}

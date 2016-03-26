@@ -1,9 +1,5 @@
 package classfile
 
-import (
-	"fmt"
-)
-
 /*
 CONSTANT_NameAndType_info {
     u1 tag;
@@ -14,10 +10,6 @@ CONSTANT_NameAndType_info {
 type ConstantNameAndTypeInfo struct {
 	nameIndex       uint16
 	descriptorIndex uint16
-}
-
-func (self *ConstantNameAndTypeInfo) toString() {
-	fmt.Println("NameAndType:ingore...")
 }
 
 func (self *ConstantNameAndTypeInfo) readInfo(reader *ClassReader) {

@@ -1,176 +1,142 @@
 package heap
 
-import (
-	"fmt"
-	"gojvm/classfile"
-	"gojvm/classpath"
-	"gojvm/options"
-)
+import "fmt"
+import "gojvm/classfile"
+import "gojvm/classpath"
 
-const (
-	jlObjectClassName       = "java/lang/Object"
-	jlClassClassName        = "java/lang/Class"
-	jlStringClassName       = "java/lang/String"
-	jlThreadClassName       = "java/lang/Thread"
-	jlCloneableClassName    = "java/lang/Cloneable"
-	ioSerializableClassName = "java/io/Serializable"
-)
-
-var (
-	bootLoader           *ClassLoader // bootstrap class loader
-	_jlObjectClass       *Class
-	_jlClassClass        *Class
-	_jlStringClass       *Class
-	_jlThreadClass       *Class
-	_jlCloneableClass    *Class
-	_ioSerializableClass *Class
-)
-
+/*
+class names:
+    - primitive types: boolean, byte, int ...
+    - primitive arrays: [Z, [B, [I ...
+    - non-array classes: java/lang/Object ...
+    - array classes: [Ljava/lang/Object; ...
+*/
 type ClassLoader struct {
-	classPath *classpath.ClassPath
-	classMap  map[string]*Class
+	cp          *classpath.Classpath
+	verboseFlag bool
+	classMap    map[string]*Class // loaded classes
 }
 
-func InitBootLoader(cp *classpath.ClassPath) {
-	bootLoader = &ClassLoader{
-		classPath: cp,
-		classMap:  map[string]*Class{},
+func NewClassLoader(cp *classpath.Classpath, verboseFlag bool) *ClassLoader {
+	loader := &ClassLoader{
+		cp:          cp,
+		verboseFlag: verboseFlag,
+		classMap:    make(map[string]*Class),
 	}
-	bootLoader._init()
+
+	loader.loadBasicClasses()
+	loader.loadPrimitiveClasses()
+	return loader
 }
 
-func (self *ClassLoader) _init() {
-	self.loadBasicClasses()
-	self.loadPrimitiveClasses()
-	self.loadPrimitiveArrayClasses()
-}
-
-//加载一些基础类
 func (self *ClassLoader) loadBasicClasses() {
-	_jlObjectClass = self.LoadClass(jlObjectClassName)
-	_jlClassClass = self.LoadClass(jlClassClassName)
+	jlClassClass := self.LoadClass("java/lang/Class")
 	for _, class := range self.classMap {
 		if class.jClass == nil {
-			class.jClass = _jlClassClass.NewObject()
+			class.jClass = jlClassClass.NewObject()
+			class.jClass.extra = class
 		}
 	}
-	_jlCloneableClass = self.LoadClass(jlCloneableClassName)
-	_ioSerializableClass = self.LoadClass(ioSerializableClassName)
-	_jlThreadClass = self.LoadClass(jlThreadClassName)
-	_jlStringClass = self.LoadClass(jlStringClassName)
 }
 
-//加载基本类型
 func (self *ClassLoader) loadPrimitiveClasses() {
-	for _, primitiveType := range PrimitiveTypes {
-		self.LoadClass(primitiveType.WrapperClassName)
+	for primitiveType, _ := range primitiveTypes {
+		self.loadPrimitiveClass(primitiveType)
 	}
 }
 
-//加载基本类型数组
-func (self *ClassLoader) loadPrimitiveArrayClasses() {
-	for _, primitiveType := range PrimitiveTypes {
-		class := &Class{
-			AccessFlags: AccessFlags{ACC_PUBLIC},
-			name:        primitiveType.ArrayClassName,
-			superClass:  self.LoadClass("java/lang/Object"),
-			interfaces: []*Class{
-				self.LoadClass("java/lang/Cloneable"),
-				self.LoadClass("java/io/Serializable"),
-			},
-		}
-		class.jClass = _jlClassClass.NewObject()
-		self.classMap[primitiveType.ArrayClassName] = class
+func (self *ClassLoader) loadPrimitiveClass(className string) {
+	class := &Class{
+		AccessFlags: AccessFlags{ACC_PUBLIC}, // todo
+		name:        className,
+		loader:      self,
+		initStarted: true,
 	}
+	class.jClass = self.classMap["java/lang/Class"].NewObject()
+	class.jClass.extra = class
+	self.classMap[className] = class
 }
 
-func (self *ClassLoader) LoadClass(className string) *Class {
-	if class, ok := self.classMap[className]; ok {
+func (self *ClassLoader) LoadClass(name string) *Class {
+	if class, ok := self.classMap[name]; ok {
+		// already loaded
 		return class
 	}
-	if className[0] != '[' {
-		return self.reallyLoadClass(className)
+
+	var class *Class
+	if name[0] == '[' { // array class
+		class = self.loadArrayClass(name)
 	} else {
-		// array class
-		return self.loadArrayClass(className)
+		class = self.loadNonArrayClass(name)
 	}
+
+	if jlClassClass, ok := self.classMap["java/lang/Class"]; ok {
+		class.jClass = jlClassClass.NewObject()
+		class.jClass.extra = class
+	}
+
+	return class
 }
 
-//加载数组
-func (self *ClassLoader) loadArrayClass(className string) *Class {
-	componentClass := self.LoadClass(getComponentClassName(className))
+func (self *ClassLoader) loadArrayClass(name string) *Class {
 	class := &Class{
-		AccessFlags: AccessFlags{componentClass.AccessFlags.GetAccessFlags()},
-		name:        className,
+		AccessFlags: AccessFlags{ACC_PUBLIC}, // todo
+		name:        name,
+		loader:      self,
+		initStarted: true,
 		superClass:  self.LoadClass("java/lang/Object"),
 		interfaces: []*Class{
 			self.LoadClass("java/lang/Cloneable"),
 			self.LoadClass("java/io/Serializable"),
 		},
 	}
-	class.jClass = _jlClassClass.NewObject()
-	self.classMap[className] = class
-	return class
-}
-
-//加载非数组
-func (self *ClassLoader) reallyLoadClass(name string) *Class {
-	cpEntry, data := self.readClassData(name)
-	class := self._loadClass(name, data)
-
-	if options.VerboseClass {
-		fmt.Printf("[Loaded %s from %s]\n", name, cpEntry)
-	}
-
-	return class
-}
-
-func (self *ClassLoader) readClassData(name string) (classpath.Entry, []byte) {
-	cpEntry, classData, err := self.classPath.ReadClass(name)
-	//todo
-	if err != nil {
-		panic("classNotFoundException")
-	}
-
-	return cpEntry, classData
-}
-
-//步骤
-func (self *ClassLoader) _loadClass(name string, data []byte) *Class {
-	class := self.parseClassData(name, data)
-	link(class)
-	prepare(class)
-	//createVtable(class)
-	return class
-}
-
-//加载
-func (self *ClassLoader) parseClassData(name string, data []byte) *Class {
-	cf, err := classfile.Parse(data)
-	if err != nil {
-		// todo
-		//ClassFormatError,UnsupportedClassVersionError
-		panic("failed to parse class file: " + name + "!" + err.Error())
-	}
-
-	class := newClass(cf)
 	self.classMap[name] = class
-	if _jlClassClass != nil {
-		class.jClass = _jlClassClass.NewObject()
-	}
 	return class
 }
 
-//链接
-func link(class *Class) {
+func (self *ClassLoader) loadNonArrayClass(name string) *Class {
+	data, entry := self.readClass(name)
+	class := self.defineClass(data)
+	link(class)
+
+	if self.verboseFlag {
+		fmt.Printf("[Loaded %s from %s]\n", name, entry)
+	}
+
+	return class
+}
+
+func (self *ClassLoader) readClass(name string) ([]byte, classpath.Entry) {
+	data, entry, err := self.cp.ReadClass(name)
+	if err != nil {
+		panic("java.lang.ClassNotFoundException: " + name)
+	}
+	return data, entry
+}
+
+// jvms 5.3.5
+func (self *ClassLoader) defineClass(data []byte) *Class {
+	class := parseClass(data)
+	class.loader = self
 	resolveSuperClass(class)
 	resolveInterfaces(class)
+	self.classMap[class.name] = class
+	return class
+}
+
+func parseClass(data []byte) *Class {
+	cf, err := classfile.Parse(data)
+	if err != nil {
+		//panic("java.lang.ClassFormatError")
+		panic(err)
+	}
+	return newClass(cf)
 }
 
 // jvms 5.4.3.1
 func resolveSuperClass(class *Class) {
 	if class.name != "java/lang/Object" {
-		class.superClass = bootLoader.LoadClass(class.superClassName)
+		class.superClass = class.loader.LoadClass(class.superClassName)
 	}
 }
 func resolveInterfaces(class *Class) {
@@ -178,15 +144,24 @@ func resolveInterfaces(class *Class) {
 	if interfaceCount > 0 {
 		class.interfaces = make([]*Class, interfaceCount)
 		for i, interfaceName := range class.interfaceNames {
-			class.interfaces[i] = bootLoader.LoadClass(interfaceName)
+			class.interfaces[i] = class.loader.LoadClass(interfaceName)
 		}
 	}
 }
 
-//准备
+func link(class *Class) {
+	verify(class)
+	prepare(class)
+}
+
+func verify(class *Class) {
+	// todo
+}
+
+// jvms 5.4.2
 func prepare(class *Class) {
-	calcStaticFieldSlotIds(class)
 	calcInstanceFieldSlotIds(class)
+	calcStaticFieldSlotIds(class)
 	allocAndInitStaticVars(class)
 }
 
@@ -252,13 +227,8 @@ func initStaticFinalVar(class *Class, field *Field) {
 			vars.SetDouble(slotId, val)
 		case "Ljava/lang/String;":
 			goStr := cp.GetConstant(cpIndex).(string)
-			jStr := JString(bootLoader, goStr)
+			jStr := JString(class.Loader(), goStr)
 			vars.SetRef(slotId, jStr)
 		}
 	}
-}
-
-//getter
-func GetBootLoader() *ClassLoader {
-	return bootLoader
 }

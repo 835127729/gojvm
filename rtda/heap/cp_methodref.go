@@ -1,24 +1,30 @@
 package heap
 
-import (
-	"gojvm/classfile"
-	_ "gojvm/jutil"
-)
+import "gojvm/classfile"
 
-type ConstantMethodref struct {
-	ConstantMemberref
+type MethodRef struct {
+	MemberRef
 	method *Method
 }
 
-func newConstantMethodref(refInfo *classfile.ConstantMethodrefInfo) *ConstantMethodref {
-	ref := &ConstantMethodref{}
-	ref.copy(&refInfo.ConstantMemberrefInfo)
+func newMethodRef(cp *ConstantPool, refInfo *classfile.ConstantMethodrefInfo) *MethodRef {
+	ref := &MethodRef{}
+	ref.cp = cp
+	ref.copyMemberRefInfo(&refInfo.ConstantMemberrefInfo)
 	return ref
 }
 
+func (self *MethodRef) ResolvedMethod() *Method {
+	if self.method == nil {
+		self.resolveMethodRef()
+	}
+	return self.method
+}
+
 // jvms8 5.4.3.3
-func (self *ConstantMethodref) ResolveMethod() *Method {
-	c := bootLoader.LoadClass(self.className)
+func (self *MethodRef) resolveMethodRef() {
+	d := self.cp.class
+	c := self.ResolvedClass()
 	if c.IsInterface() {
 		panic("java.lang.IncompatibleClassChangeError")
 	}
@@ -27,9 +33,11 @@ func (self *ConstantMethodref) ResolveMethod() *Method {
 	if method == nil {
 		panic("java.lang.NoSuchMethodError")
 	}
+	if !method.isAccessibleTo(d) {
+		panic("java.lang.IllegalAccessError")
+	}
 
 	self.method = method
-	return method
 }
 
 func lookupMethod(class *Class, name, descriptor string) *Method {

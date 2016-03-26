@@ -1,9 +1,5 @@
 package classfile
 
-import (
-	"gojvm/jutil"
-)
-
 // Constant pool tags
 const (
 	CONSTANT_Class              = 7
@@ -30,10 +26,9 @@ cp_info {
 */
 type ConstantInfo interface {
 	readInfo(reader *ClassReader)
-	toString()
 }
 
-func readConstantInfo(reader *ClassReader, cp *ConstantPool) ConstantInfo {
+func readConstantInfo(reader *ClassReader, cp ConstantPool) ConstantInfo {
 	tag := reader.readUint8()
 	c := newConstantInfo(tag, cp)
 	c.readInfo(reader)
@@ -41,7 +36,7 @@ func readConstantInfo(reader *ClassReader, cp *ConstantPool) ConstantInfo {
 }
 
 // todo ugly code
-func newConstantInfo(tag uint8, cp *ConstantPool) ConstantInfo {
+func newConstantInfo(tag uint8, cp ConstantPool) ConstantInfo {
 	switch tag {
 	case CONSTANT_Integer:
 		return &ConstantIntegerInfo{}
@@ -70,9 +65,8 @@ func newConstantInfo(tag uint8, cp *ConstantPool) ConstantInfo {
 	case CONSTANT_MethodHandle:
 		return &ConstantMethodHandleInfo{}
 	case CONSTANT_InvokeDynamic:
-		return &ConstantInvokeDynamicInfo{cp: cp}
-	default: // todo
-		jutil.Panicf("BAD constant pool tag: %v", tag)
-		return nil
+		return &ConstantInvokeDynamicInfo{}
+	default:
+		panic("java.lang.ClassFormatError: constant pool tag!")
 	}
 }

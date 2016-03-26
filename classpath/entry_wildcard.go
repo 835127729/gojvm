@@ -1,31 +1,28 @@
 package classpath
 
-import (
-	"os"
-	"path/filepath"
-	"strings"
-)
+import "os"
+import "path/filepath"
+import "strings"
 
-type WildcardEntry struct {
-	CompositeEntry
-}
-
-func newWildcardEntry(path string) *WildcardEntry {
+func newWildcardEntry(path string) CompositeEntry {
 	baseDir := path[:len(path)-1] // remove *
-	entry := &WildcardEntry{}
+	compositeEntry := []Entry{}
 
 	walkFn := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 		if info.IsDir() && path != baseDir {
 			return filepath.SkipDir
 		}
 		if strings.HasSuffix(path, ".jar") || strings.HasSuffix(path, ".JAR") {
 			jarEntry := newZipEntry(path)
-			entry.addEntry(jarEntry)
+			compositeEntry = append(compositeEntry, jarEntry)
 		}
 		return nil
 	}
 
 	filepath.Walk(baseDir, walkFn)
 
-	return entry
+	return compositeEntry
 }

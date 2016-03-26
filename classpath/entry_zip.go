@@ -1,46 +1,44 @@
 package classpath
 
-import (
-	"archive/zip"
-	"errors"
-	"io/ioutil"
-	"path/filepath"
-)
+import "archive/zip"
+import "errors"
+import "io/ioutil"
+import "path/filepath"
 
 type ZipEntry struct {
-	absZip string
-	zipRC  *zip.ReadCloser
+	absPath string
+	zipRC   *zip.ReadCloser
 }
 
 func newZipEntry(path string) *ZipEntry {
-	absZip, err := filepath.Abs(path)
+	absPath, err := filepath.Abs(path)
 	if err != nil {
 		panic(err)
 	}
 
-	return &ZipEntry{absZip, nil}
+	return &ZipEntry{absPath, nil}
 }
 
-func (self *ZipEntry) readClass(className string) (Entry, []byte, error) {
+func (self *ZipEntry) readClass(className string) ([]byte, Entry, error) {
 	if self.zipRC == nil {
 		err := self.openJar()
 		if err != nil {
-			return self, nil, err
+			return nil, nil, err
 		}
 	}
 
 	classFile := self.findClass(className)
 	if classFile == nil {
-		return self, nil, errors.New("class not found: " + className)
+		return nil, nil, errors.New("class not found: " + className)
 	}
 
 	data, err := readClass(classFile)
-	return self, data, err
+	return data, self, err
 }
 
 // todo: close zip
 func (self *ZipEntry) openJar() error {
-	r, err := zip.OpenReader(self.absZip) // func OpenReader(name string) (*ReadCloser, error)
+	r, err := zip.OpenReader(self.absPath)
 	if err == nil {
 		self.zipRC = r
 	}
@@ -57,12 +55,12 @@ func (self *ZipEntry) findClass(className string) *zip.File {
 }
 
 func readClass(classFile *zip.File) ([]byte, error) {
-	rc, err := classFile.Open() // func (f *File) Open() (rc io.ReadCloser, err error)
+	rc, err := classFile.Open()
 	if err != nil {
 		return nil, err
 	}
 	// read class data
-	data, err := ioutil.ReadAll(rc) // func ReadAll(r io.Reader) ([]byte, error)
+	data, err := ioutil.ReadAll(rc)
 	rc.Close()
 	if err != nil {
 		return nil, err
@@ -71,5 +69,5 @@ func readClass(classFile *zip.File) ([]byte, error) {
 }
 
 func (self *ZipEntry) String() string {
-	return self.absZip
+	return self.absPath
 }

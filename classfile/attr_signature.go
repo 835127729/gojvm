@@ -8,7 +8,7 @@ Signature_attribute {
 }
 */
 type SignatureAttribute struct {
-	cp             *ConstantPool
+	cp             ConstantPool
 	signatureIndex uint16
 }
 

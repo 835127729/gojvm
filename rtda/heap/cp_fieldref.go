@@ -1,63 +1,58 @@
 package heap
 
-import (
-	"fmt"
-	cf "gojvm/classfile"
-	"gojvm/jutil"
-)
+import "gojvm/classfile"
 
-type ConstantFieldref struct {
-	ConstantMemberref
+type FieldRef struct {
+	MemberRef
 	field *Field
 }
 
-func newConstantFieldref(refInfo *cf.ConstantFieldrefInfo) *ConstantFieldref {
-	ref := &ConstantFieldref{}
-	ref.copy(&refInfo.ConstantMemberrefInfo)
+func newFieldRef(cp *ConstantPool, refInfo *classfile.ConstantFieldrefInfo) *FieldRef {
+	ref := &FieldRef{}
+	ref.cp = cp
+	ref.copyMemberRefInfo(&refInfo.ConstantMemberrefInfo)
 	return ref
 }
 
-func (self *ConstantFieldref) String() string {
-	return fmt.Sprintf("{ConstantFieldref className:%v name:%v descriptor:%v}",
-		self.className, self.name, self.descriptor)
-}
-
-func (self *ConstantFieldref) InstanceField() *Field {
+func (self *FieldRef) ResolvedField() *Field {
 	if self.field == nil {
-		self.resolveInstanceField()
+		self.resolveFieldRef()
 	}
 	return self.field
 }
 
-func (self *ConstantFieldref) resolveInstanceField() {
-	fromClass := bootLoader.LoadClass(self.className)
+// jvms 5.4.3.2
+func (self *FieldRef) resolveFieldRef() {
+	d := self.cp.class
+	c := self.ResolvedClass()
+	field := lookupField(c, self.name, self.descriptor)
 
-	field := fromClass.getField(self.name, self.descriptor, false)
-	if field != nil {
-		self.field = field
-		return
+	if field == nil {
+		panic("java.lang.NoSuchFieldError")
+	}
+	if !field.isAccessibleTo(d) {
+		panic("java.lang.IllegalAccessError")
 	}
 
-	// todo
-	jutil.Panicf("instance field not found! %v", self)
+	self.field = field
 }
 
-func (self *ConstantFieldref) StaticField() *Field {
-	if self.field == nil {
-		self.resolveStaticField()
-	}
-	return self.field
-}
-
-func (self *ConstantFieldref) resolveStaticField() {
-	fromClass := bootLoader.LoadClass(self.className)
-
-	field := fromClass.getField(self.name, self.descriptor, true)
-	if field != nil {
-		self.field = field
-		return
+func lookupField(c *Class, name, descriptor string) *Field {
+	for _, field := range c.fields {
+		if field.name == name && field.descriptor == descriptor {
+			return field
+		}
 	}
 
-	// todo
-	jutil.Panicf("instance field not found! %v", self)
+	for _, iface := range c.interfaces {
+		if field := lookupField(iface, name, descriptor); field != nil {
+			return field
+		}
+	}
+
+	if c.superClass != nil {
+		return lookupField(c.superClass, name, descriptor)
+	}
+
+	return nil
 }

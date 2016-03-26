@@ -1,58 +1,74 @@
 package classpath
 
-import (
-	"path/filepath"
-	"strings"
+import "os"
+import "path/filepath"
 
-	"gojvm/options"
-)
-
-type ClassPath struct {
-	CompositeEntry
+type Classpath struct {
+	bootClasspath Entry
+	extClasspath  Entry
+	userClasspath Entry
 }
 
-func Parse(cpOption string) *ClassPath {
-	cp := &ClassPath{}
-	cp.parseBootAndExtClassPath()
-
-	cp.parseUserClassPath(cpOption)
+func Parse(jreOption, cpOption string) *Classpath {
+	cp := &Classpath{}
+	cp.parseBootAndExtClasspath(jreOption)
+	cp.parseUserClasspath(cpOption)
 	return cp
 }
 
-func (self *ClassPath) parseBootAndExtClassPath() {
+func (self *Classpath) parseBootAndExtClasspath(jreOption string) {
+	jreDir := getJreDir(jreOption)
+
 	// jre/lib/*
-	jreLibPath := filepath.Join(options.AbsJavaHome, "lib", "*")
-	self.addEntry(newWildcardEntry(jreLibPath))
+	jreLibPath := filepath.Join(jreDir, "lib", "*")
+	self.bootClasspath = newWildcardEntry(jreLibPath)
 
 	// jre/lib/ext/*
-	jreExtPath := filepath.Join(options.AbsJavaHome, "lib", "ext", "*")
-	self.addEntry(newWildcardEntry(jreExtPath))
+	jreExtPath := filepath.Join(jreDir, "lib", "ext", "*")
+	self.extClasspath = newWildcardEntry(jreExtPath)
 }
 
-func (self *ClassPath) parseUserClassPath(cpOption string) {
+func getJreDir(jreOption string) string {
+	if jreOption != "" && exists(jreOption) {
+		return jreOption
+	}
+	if exists("./jre") {
+		return "./jre"
+	}
+	if jh := os.Getenv("JAVA_HOME"); jh != "" {
+		return filepath.Join(jh, "jre")
+	}
+	panic("Can not find jre folder!")
+}
+
+func exists(path string) bool {
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			return false
+		}
+	}
+	return true
+}
+
+func (self *Classpath) parseUserClasspath(cpOption string) {
 	if cpOption == "" {
 		cpOption = "."
 	}
-
-	self.addEntry(newEntry(cpOption))
+	self.userClasspath = newEntry(cpOption)
 }
 
 // className: fully/qualified/ClassName
-func (self *ClassPath) ReadClass(className string) (Entry, []byte, error) {
+func (self *Classpath) ReadClass(className string) ([]byte, Entry, error) {
 	className = className + ".class"
-	return self.readClass(className)
-}
-
-func (self *ClassPath) String() string {
-	userClassPath := self.CompositeEntry.entries[2]
-	return userClassPath.String()
-}
-
-func IsBootClassPath(entry Entry) bool {
-	if entry == nil {
-		// todo
-		return true
+	if data, entry, err := self.bootClasspath.readClass(className); err == nil {
+		return data, entry, err
 	}
+	if data, entry, err := self.extClasspath.readClass(className); err == nil {
+		return data, entry, err
+	}
+	return self.userClasspath.readClass(className)
+}
 
-	return strings.HasPrefix(entry.String(), options.AbsJreLib)
+func (self *Classpath) String() string {
+	return self.userClasspath.String()
 }

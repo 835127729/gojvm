@@ -1,53 +1,30 @@
 package classfile
 
-import (
-	"fmt"
-)
-
 /*
 CONSTANT_Fieldref_info {
     u1 tag;
     u2 class_index;
     u2 name_and_type_index;
 }
-*/
-type ConstantFieldrefInfo struct {
-	ConstantMemberrefInfo
-}
-
-/*
 CONSTANT_Methodref_info {
     u1 tag;
     u2 class_index;
     u2 name_and_type_index;
 }
-*/
-type ConstantMethodrefInfo struct {
-	ConstantMemberrefInfo
-}
-
-/*
 CONSTANT_InterfaceMethodref_info {
     u1 tag;
     u2 class_index;
     u2 name_and_type_index;
 }
 */
-type ConstantInterfaceMethodrefInfo struct {
-	ConstantMemberrefInfo
-}
+type ConstantFieldrefInfo struct{ ConstantMemberrefInfo }
+type ConstantMethodrefInfo struct{ ConstantMemberrefInfo }
+type ConstantInterfaceMethodrefInfo struct{ ConstantMemberrefInfo }
 
 type ConstantMemberrefInfo struct {
-	cp               *ConstantPool
+	cp               ConstantPool
 	classIndex       uint16
 	nameAndTypeIndex uint16
-}
-
-func (self *ConstantMemberrefInfo) toString() {
-	fmt.Println("Memberref:")
-	fmt.Println("ClassName:", self.ClassName())
-	name, de := self.NameAndDescriptor()
-	fmt.Println("NameAndDescriptor:\n name", name, "Descriptor,", de)
 }
 
 func (self *ConstantMemberrefInfo) readInfo(reader *ClassReader) {

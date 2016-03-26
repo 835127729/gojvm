@@ -1,9 +1,6 @@
 package classfile
 
-import (
-	"fmt"
-	"math"
-)
+import "math"
 
 /*
 CONSTANT_Integer_info {
@@ -13,10 +10,6 @@ CONSTANT_Integer_info {
 */
 type ConstantIntegerInfo struct {
 	val int32
-}
-
-func (self *ConstantIntegerInfo) toString() {
-	fmt.Println("int:", self.val)
 }
 
 func (self *ConstantIntegerInfo) readInfo(reader *ClassReader) {
@@ -35,10 +28,6 @@ CONSTANT_Float_info {
 */
 type ConstantFloatInfo struct {
 	val float32
-}
-
-func (self *ConstantFloatInfo) toString() {
-	fmt.Println("float:", self.val)
 }
 
 func (self *ConstantFloatInfo) readInfo(reader *ClassReader) {
@@ -60,10 +49,6 @@ type ConstantLongInfo struct {
 	val int64
 }
 
-func (self *ConstantLongInfo) toString() {
-	fmt.Println("long:", self.val)
-}
-
 func (self *ConstantLongInfo) readInfo(reader *ClassReader) {
 	bytes := reader.readUint64()
 	self.val = int64(bytes)
@@ -81,10 +66,6 @@ CONSTANT_Double_info {
 */
 type ConstantDoubleInfo struct {
 	val float64
-}
-
-func (self *ConstantDoubleInfo) toString() {
-	fmt.Println("double:", self.val)
 }
 
 func (self *ConstantDoubleInfo) readInfo(reader *ClassReader) {

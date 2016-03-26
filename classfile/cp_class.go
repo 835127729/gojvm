@@ -1,9 +1,5 @@
 package classfile
 
-import (
-	"fmt"
-)
-
 /*
 CONSTANT_Class_info {
     u1 tag;
@@ -11,12 +7,8 @@ CONSTANT_Class_info {
 }
 */
 type ConstantClassInfo struct {
-	cp        *ConstantPool
+	cp        ConstantPool
 	nameIndex uint16
-}
-
-func (self *ConstantClassInfo) toString() {
-	fmt.Println("utf8:", self.Name())
 }
 
 func (self *ConstantClassInfo) readInfo(reader *ClassReader) {

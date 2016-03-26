@@ -4,16 +4,12 @@ import "gojvm/classfile"
 
 type Method struct {
 	ClassMember
-	maxStack                uint
-	maxLocals               uint
-	code                    []byte
-	exceptionTable          ExceptionTable // todo: rename
-	lineNumberTable         *classfile.LineNumberTableAttribute
-	exceptions              *classfile.ExceptionsAttribute // todo: rename
-	parameterAnnotationData []byte                         // RuntimeVisibleParameterAnnotations_attribute
-	annotationDefaultData   []byte                         // AnnotationDefault_attribute
-	parsedDescriptor        *MethodDescriptor
-	argSlotCount            uint
+	maxStack        uint
+	maxLocals       uint
+	code            []byte
+	exceptionTable  ExceptionTable
+	lineNumberTable *classfile.LineNumberTableAttribute
+	argSlotCount    uint
 }
 
 func newMethods(class *Class, cfMethods []*classfile.MemberInfo) []*Method {
@@ -30,7 +26,6 @@ func newMethod(class *Class, cfMethod *classfile.MemberInfo) *Method {
 	method.copyMemberInfo(cfMethod)
 	method.copyAttributes(cfMethod)
 	md := parseMethodDescriptor(method.descriptor)
-	method.parsedDescriptor = md
 	method.calcArgSlotCount(md.parameterTypes)
 	if method.IsNative() {
 		method.injectCodeAttribute(md.returnType)
@@ -47,9 +42,6 @@ func (self *Method) copyAttributes(cfMethod *classfile.MemberInfo) {
 		self.exceptionTable = newExceptionTable(codeAttr.ExceptionTable(),
 			self.class.constantPool)
 	}
-	self.annotationData = cfMethod.RuntimeVisibleAnnotationsAttributeData()
-	self.parameterAnnotationData = cfMethod.RuntimeVisibleParameterAnnotationsAttributeData()
-	self.annotationDefaultData = cfMethod.AnnotationDefaultAttributeData()
 }
 
 func (self *Method) calcArgSlotCount(paramTypes []string) {
@@ -112,15 +104,6 @@ func (self *Method) MaxLocals() uint {
 func (self *Method) Code() []byte {
 	return self.code
 }
-func (self *Method) ParameterAnnotationData() []byte {
-	return self.parameterAnnotationData
-}
-func (self *Method) AnnotationDefaultData() []byte {
-	return self.annotationDefaultData
-}
-func (self *Method) ParsedDescriptor() *MethodDescriptor {
-	return self.parsedDescriptor
-}
 func (self *Method) ArgSlotCount() uint {
 	return self.argSlotCount
 }
@@ -141,11 +124,4 @@ func (self *Method) GetLineNumber(pc int) int {
 		return -1
 	}
 	return self.lineNumberTable.GetLineNumber(pc)
-}
-
-func (self *Method) isConstructor() bool {
-	return !self.IsStatic() && self.name == "<init>"
-}
-func (self *Method) isClinit() bool {
-	return self.IsStatic() && self.name == "<clinit>"
 }

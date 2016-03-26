@@ -9,8 +9,8 @@ type ANEW_ARRAY struct{ base.Index16Instruction }
 
 func (self *ANEW_ARRAY) Execute(frame *rtda.Frame) {
 	cp := frame.Method().Class().ConstantPool()
-	classRef := cp.GetConstant(self.Index).(*heap.ConstantClassref)
-	componentClass := classRef.ResolveClass()
+	classRef := cp.GetConstant(self.Index).(*heap.ClassRef)
+	componentClass := classRef.ResolvedClass()
 
 	// if componentClass.InitializationNotStarted() {
 	// 	thread := frame.Thread()

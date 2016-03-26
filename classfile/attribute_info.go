@@ -16,7 +16,7 @@ type AttributeInfo interface {
 	readInfo(reader *ClassReader)
 }
 
-func readAttributes(reader *ClassReader, cp *ConstantPool) []AttributeInfo {
+func readAttributes(reader *ClassReader, cp ConstantPool) []AttributeInfo {
 	attributesCount := reader.readUint16()
 	attributes := make([]AttributeInfo, attributesCount)
 	for i := range attributes {
@@ -25,23 +25,16 @@ func readAttributes(reader *ClassReader, cp *ConstantPool) []AttributeInfo {
 	return attributes
 }
 
-func readAttribute(reader *ClassReader, cp *ConstantPool) AttributeInfo {
+func readAttribute(reader *ClassReader, cp ConstantPool) AttributeInfo {
 	attrNameIndex := reader.readUint16()
-	attrLen := reader.readUint32()
 	attrName := cp.getUtf8(attrNameIndex)
-	attrInfo := newAttributeInfo(attrName, cp)
-	if attrInfo == nil {
-		attrInfo = &UnparsedAttribute{
-			name:   attrName,
-			length: attrLen,
-		}
-	}
-
+	attrLen := reader.readUint32()
+	attrInfo := newAttributeInfo(attrName, attrLen, cp)
 	attrInfo.readInfo(reader)
 	return attrInfo
 }
 
-func newAttributeInfo(attrName string, cp *ConstantPool) AttributeInfo {
+func newAttributeInfo(attrName string, attrLen uint32, cp ConstantPool) AttributeInfo {
 	switch attrName {
 	// case "AnnotationDefault":
 	case "BootstrapMethods":
@@ -80,6 +73,6 @@ func newAttributeInfo(attrName string, cp *ConstantPool) AttributeInfo {
 	case "Synthetic":
 		return _attrSynthetic
 	default:
-		return nil // undefined attr
+		return &UnparsedAttribute{attrName, attrLen, nil}
 	}
 }

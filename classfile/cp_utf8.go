@@ -1,9 +1,7 @@
 package classfile
 
-import (
-	"fmt"
-	"unicode/utf16"
-)
+import "fmt"
+import "unicode/utf16"
 
 /*
 CONSTANT_Utf8_info {
@@ -14,10 +12,6 @@ CONSTANT_Utf8_info {
 */
 type ConstantUtf8Info struct {
 	str string
-}
-
-func (self *ConstantUtf8Info) toString() {
-	fmt.Println("utf8:", self.Str())
 }
 
 func (self *ConstantUtf8Info) readInfo(reader *ClassReader) {

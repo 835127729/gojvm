@@ -55,7 +55,7 @@ func createStackTraceElement(frame *rtda.Frame) *StackTraceElement {
 	method := frame.Method()
 	class := method.Class()
 	return &StackTraceElement{
-		fileName:   class.Name(),
+		fileName:   class.SourceFile(),
 		className:  class.JavaName(),
 		methodName: method.Name(),
 		lineNumber: method.GetLineNumber(frame.NextPC() - 1),

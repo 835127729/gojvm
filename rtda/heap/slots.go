@@ -1,13 +1,12 @@
 package heap
 
-import (
-	"math"
-)
+import "math"
 
 type Slot struct {
 	num int32
 	ref *Object
 }
+
 type Slots []Slot
 
 func newSlots(slotCount uint) Slots {

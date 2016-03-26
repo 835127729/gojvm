@@ -1,15 +1,9 @@
 package classfile
 
-import (
-	"encoding/binary"
-)
+import "encoding/binary"
 
 type ClassReader struct {
 	data []byte
-}
-
-func newClassReader(data []byte) *ClassReader {
-	return &ClassReader{data}
 }
 
 // u1
@@ -48,8 +42,8 @@ func (self *ClassReader) readUint16s() []uint16 {
 	return s
 }
 
-func (self *ClassReader) readBytes(length uint32) []byte {
-	bytes := self.data[:length]
-	self.data = self.data[length:]
+func (self *ClassReader) readBytes(n uint32) []byte {
+	bytes := self.data[:n]
+	self.data = self.data[n:]
 	return bytes
 }

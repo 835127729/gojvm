@@ -9,8 +9,8 @@ type GET_STATIC struct{ base.Index16Instruction }
 
 func (self *GET_STATIC) Execute(frame *rtda.Frame) {
 	cp := frame.Method().Class().ConstantPool()
-	fieldRef := cp.GetConstant(self.Index).(*heap.ConstantFieldref)
-	field := fieldRef.StaticField()
+	fieldRef := cp.GetConstant(self.Index).(*heap.FieldRef)
+	field := fieldRef.ResolvedField()
 	class := field.Class()
 	if !class.InitStarted() {
 		frame.RevertNextPC()

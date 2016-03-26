@@ -4,11 +4,9 @@ import "gojvm/classfile"
 
 type ClassMember struct {
 	AccessFlags
-	name           string
-	descriptor     string
-	signature      string
-	annotationData []byte // RuntimeVisibleAnnotations_attribute
-	class          *Class
+	name       string
+	descriptor string
+	class      *Class
 }
 
 func (self *ClassMember) copyMemberInfo(memberInfo *classfile.MemberInfo) {
@@ -24,12 +22,22 @@ func (self *ClassMember) Name() string {
 func (self *ClassMember) Descriptor() string {
 	return self.descriptor
 }
-func (self *ClassMember) Signature() string {
-	return self.signature
-}
-func (self *ClassMember) AnnotationData() []byte {
-	return self.annotationData
-}
 func (self *ClassMember) Class() *Class {
 	return self.class
+}
+
+// jvms 5.4.4
+func (self *ClassMember) isAccessibleTo(d *Class) bool {
+	if self.IsPublic() {
+		return true
+	}
+	c := self.class
+	if self.IsProtected() {
+		return d == c || d.IsSubClassOf(c) ||
+			c.GetPackageName() == d.GetPackageName()
+	}
+	if !self.IsPrivate() {
+		return c.GetPackageName() == d.GetPackageName()
+	}
+	return d == c
 }

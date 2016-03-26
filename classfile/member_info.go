@@ -16,30 +16,33 @@ method_info {
     attribute_info attributes[attributes_count];
 }
 */
+
 type MemberInfo struct {
-	cp              *ConstantPool
+	cp              ConstantPool
 	accessFlags     uint16
 	nameIndex       uint16
 	descriptorIndex uint16
-	AttributeTable
+	attributes      []AttributeInfo
 }
 
 // read field or method table
-func readMembers(reader *ClassReader, cp *ConstantPool) []*MemberInfo {
+func readMembers(reader *ClassReader, cp ConstantPool) []*MemberInfo {
 	memberCount := reader.readUint16()
 	members := make([]*MemberInfo, memberCount)
 	for i := range members {
-		members[i] = &MemberInfo{cp: cp}
-		members[i].read(reader)
+		members[i] = readMember(reader, cp)
 	}
 	return members
 }
 
-func (self *MemberInfo) read(reader *ClassReader) {
-	self.accessFlags = reader.readUint16()
-	self.nameIndex = reader.readUint16()
-	self.descriptorIndex = reader.readUint16()
-	self.attributes = readAttributes(reader, self.cp)
+func readMember(reader *ClassReader, cp ConstantPool) *MemberInfo {
+	return &MemberInfo{
+		cp:              cp,
+		accessFlags:     reader.readUint16(),
+		nameIndex:       reader.readUint16(),
+		descriptorIndex: reader.readUint16(),
+		attributes:      readAttributes(reader, cp),
+	}
 }
 
 func (self *MemberInfo) AccessFlags() uint16 {
@@ -51,10 +54,23 @@ func (self *MemberInfo) Name() string {
 func (self *MemberInfo) Descriptor() string {
 	return self.cp.getUtf8(self.descriptorIndex)
 }
-func (self *MemberInfo) Signature() string {
-	signatureAttr := self.SignatureAttribute()
-	if signatureAttr != nil {
-		return signatureAttr.Signature()
+
+func (self *MemberInfo) CodeAttribute() *CodeAttribute {
+	for _, attrInfo := range self.attributes {
+		switch attrInfo.(type) {
+		case *CodeAttribute:
+			return attrInfo.(*CodeAttribute)
+		}
 	}
-	return ""
+	return nil
+}
+
+func (self *MemberInfo) ConstantValueAttribute() *ConstantValueAttribute {
+	for _, attrInfo := range self.attributes {
+		switch attrInfo.(type) {
+		case *ConstantValueAttribute:
+			return attrInfo.(*ConstantValueAttribute)
+		}
+	}
+	return nil
 }

@@ -1,9 +1,5 @@
 package classfile
 
-import (
-	"fmt"
-)
-
 /*
 CONSTANT_String_info {
     u1 tag;
@@ -11,12 +7,8 @@ CONSTANT_String_info {
 }
 */
 type ConstantStringInfo struct {
-	cp          *ConstantPool
+	cp          ConstantPool
 	stringIndex uint16
-}
-
-func (self *ConstantStringInfo) toString() {
-	fmt.Println("string:", self.String())
 }
 
 func (self *ConstantStringInfo) readInfo(reader *ClassReader) {

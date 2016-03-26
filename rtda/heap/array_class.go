@@ -34,7 +34,3 @@ func (self *Class) NewArray(count uint) *Object {
 		return &Object{self, make([]*Object, count), nil}
 	}
 }
-
-func NewByteArray(loader *ClassLoader, bytes []int8) *Object {
-	return &Object{loader.LoadClass("[B"), bytes, nil}
-}

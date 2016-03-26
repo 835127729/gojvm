@@ -1,16 +1,21 @@
 package heap
 
-import (
-	cf "gojvm/classfile"
-)
+import "gojvm/classfile"
 
-type ConstantMemberref struct {
-	className  string
+type MemberRef struct {
+	SymRef
 	name       string
 	descriptor string
 }
 
-func (self *ConstantMemberref) copy(refInfo *cf.ConstantMemberrefInfo) {
+func (self *MemberRef) copyMemberRefInfo(refInfo *classfile.ConstantMemberrefInfo) {
 	self.className = refInfo.ClassName()
 	self.name, self.descriptor = refInfo.NameAndDescriptor()
+}
+
+func (self *MemberRef) Name() string {
+	return self.name
+}
+func (self *MemberRef) Descriptor() string {
+	return self.descriptor
 }

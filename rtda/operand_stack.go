@@ -100,8 +100,3 @@ func (self *OperandStack) PushBoolean(val bool) {
 func (self *OperandStack) PopBoolean() bool {
 	return self.PopInt() == 1
 }
-
-// todo
-func NewOperandStack(maxStack uint) *OperandStack {
-	return newOperandStack(maxStack)
-}

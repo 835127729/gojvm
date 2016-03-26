@@ -9,7 +9,7 @@ EnclosingMethod_attribute {
 }
 */
 type EnclosingMethodAttribute struct {
-	cp          *ConstantPool
+	cp          ConstantPool
 	classIndex  uint16
 	methodIndex uint16
 }
