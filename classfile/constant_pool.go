@@ -48,3 +48,8 @@ func (self ConstantPool) getUtf8(index uint16) string {
 	utf8Info := self.getConstantInfo(index).(*ConstantUtf8Info)
 	return utf8Info.str
 }
+
+func (self ConstantPool) getNumeric(index uint16) string {
+	utf8Info := self.getConstantInfo(index).(*ConstantUtf8Info)
+	return utf8Info.str
+}

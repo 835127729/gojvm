@@ -1,6 +1,9 @@
 package rtda
 
-import "gojvm/rtda/heap"
+import (
+	"fmt"
+	"gojvm/rtda/heap"
+)
 
 /*
 JVM
@@ -23,6 +26,22 @@ func NewThread() *Thread {
 	}
 }
 
+func (self *Thread) HandleUncaughtException(ex *heap.Object) {
+	fmt.Println("*******************HandleUncaughtException****************************")
+	self.stack.clear()
+	sysClass := ex.Class().Loader().LoadClass("java/lang/System")
+	sysErr := sysClass.GetStaticValue("out", "Ljava/io/PrintStream;").(*heap.Object)
+	printStackTrace := ex.Class().GetInstanceMethod("printStackTrace", "(Ljava/io/PrintStream;)V")
+
+	// call ex.printStackTrace(System.err)
+	newFrame := self.NewFrame(printStackTrace)
+	vars := newFrame.localVars
+	vars.SetRef(0, ex)
+	vars.SetRef(1, sysErr)
+	self.PushFrame(newFrame)
+}
+
+//getter
 func (self *Thread) PC() int {
 	return self.pc
 }

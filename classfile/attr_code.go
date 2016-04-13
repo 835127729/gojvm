@@ -59,6 +59,26 @@ func (self *CodeAttribute) LineNumberTableAttribute() *LineNumberTableAttribute 
 	return nil
 }
 
+func (self *CodeAttribute) StackMapTableAttribute() *StackMapTableAttribute {
+	for _, attrInfo := range self.attributes {
+		switch attrInfo.(type) {
+		case *StackMapTableAttribute:
+			return attrInfo.(*StackMapTableAttribute)
+		}
+	}
+	return nil
+}
+
+func (self *CodeAttribute) LocalVariableTableAttribute() *LocalVariableTableAttribute {
+	for _, attrInfo := range self.attributes {
+		switch attrInfo.(type) {
+		case *LocalVariableTableAttribute:
+			return attrInfo.(*LocalVariableTableAttribute)
+		}
+	}
+	return nil
+}
+
 type ExceptionTableEntry struct {
 	startPc   uint16
 	endPc     uint16

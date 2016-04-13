@@ -26,6 +26,7 @@ cp_info {
 */
 type ConstantInfo interface {
 	readInfo(reader *ClassReader)
+	toString() string
 }
 
 func readConstantInfo(reader *ClassReader, cp ConstantPool) ConstantInfo {

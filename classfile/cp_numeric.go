@@ -19,6 +19,9 @@ func (self *ConstantIntegerInfo) readInfo(reader *ClassReader) {
 func (self *ConstantIntegerInfo) Value() int32 {
 	return self.val
 }
+func (self *ConstantIntegerInfo) toString() string {
+	return "Int"
+}
 
 /*
 CONSTANT_Float_info {
@@ -36,6 +39,9 @@ func (self *ConstantFloatInfo) readInfo(reader *ClassReader) {
 }
 func (self *ConstantFloatInfo) Value() float32 {
 	return self.val
+}
+func (self *ConstantFloatInfo) toString() string {
+	return "Float"
 }
 
 /*
@@ -56,6 +62,9 @@ func (self *ConstantLongInfo) readInfo(reader *ClassReader) {
 func (self *ConstantLongInfo) Value() int64 {
 	return self.val
 }
+func (self *ConstantLongInfo) toString() string {
+	return "Long"
+}
 
 /*
 CONSTANT_Double_info {
@@ -74,4 +83,7 @@ func (self *ConstantDoubleInfo) readInfo(reader *ClassReader) {
 }
 func (self *ConstantDoubleInfo) Value() float64 {
 	return self.val
+}
+func (self *ConstantDoubleInfo) toString() string {
+	return "Double"
 }

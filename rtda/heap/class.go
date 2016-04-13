@@ -152,8 +152,18 @@ func (self *Class) JavaName() string {
 }
 
 func (self *Class) IsPrimitive() bool {
-	_, ok := primitiveTypes[self.name]
-	return ok
+	for _, primitiveType := range primitiveTypes {
+		if self.name == primitiveType.Name {
+			return true
+		}
+	}
+	return false
+}
+
+//reflect
+func (self *Class) GetStaticValue(name, descriptor string) interface{} {
+	field := self.getField(name, descriptor, true)
+	return field.GetStaticValue()
 }
 
 func (self *Class) GetInstanceMethod(name, descriptor string) *Method {

@@ -8,6 +8,7 @@ ConstantValue_attribute {
 }
 */
 type ConstantValueAttribute struct {
+	cp                 ConstantPool
 	constantValueIndex uint16
 }
 

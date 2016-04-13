@@ -16,7 +16,8 @@ func (self *ATHROW) Execute(frame *rtda.Frame) {
 
 	thread := frame.Thread()
 	if !findAndGotoExceptionHandler(thread, ex) {
-		handleUncaughtException(thread, ex)
+		thread.HandleUncaughtException(ex)
+		//handleUncaughtException(thread, ex)
 	}
 }
 

@@ -1,16 +1,18 @@
 package heap
 
 type Object struct {
-	class *Class
-	data  interface{} // Slots for Object, []int32 for int[] ...
-	extra interface{}
+	class   *Class
+	data    interface{} // Slots for Object, []int32 for int[] ...
+	extra   interface{}
+	monitor *Monitor
 }
 
 // create normal (non-array) object
 func newObject(class *Class) *Object {
 	return &Object{
-		class: class,
-		data:  newSlots(class.instanceSlotCount),
+		class:   class,
+		data:    newSlots(class.instanceSlotCount),
+		monitor: newMonitor(),
 	}
 }
 
@@ -27,7 +29,9 @@ func (self *Object) Extra() interface{} {
 func (self *Object) SetExtra(extra interface{}) {
 	self.extra = extra
 }
-
+func (self *Object) Monitor() *Monitor {
+	return self.monitor
+}
 func (self *Object) IsInstanceOf(class *Class) bool {
 	return class.isAssignableFrom(self.class)
 }

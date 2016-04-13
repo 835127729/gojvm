@@ -24,6 +24,10 @@ func (self *Field) copyAttributes(cfField *classfile.MemberInfo) {
 	}
 }
 
+func (self *Field) GetStaticValue() interface{} {
+	return self.class.staticVars[self.slotId]
+}
+
 func (self *Field) IsVolatile() bool {
 	return 0 != self.accessFlags&ACC_VOLATILE
 }

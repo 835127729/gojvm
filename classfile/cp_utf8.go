@@ -24,6 +24,10 @@ func (self *ConstantUtf8Info) Str() string {
 	return self.str
 }
 
+func (self *ConstantUtf8Info) toString() string {
+	return "Utf8"
+}
+
 /*
 func decodeMUTF8(bytes []byte) string {
 	return string(bytes) // not correct!
@@ -39,16 +43,6 @@ func decodeMUTF8(bytearr []byte) string {
 	var c, char2, char3 uint16
 	count := 0
 	chararr_count := 0
-
-	for count < utflen {
-		c = uint16(bytearr[count])
-		if c > 127 {
-			break
-		}
-		count++
-		chararr[chararr_count] = c
-		chararr_count++
-	}
 
 	for count < utflen {
 		c = uint16(bytearr[count])
@@ -85,7 +79,21 @@ func decodeMUTF8(bytearr []byte) string {
 			chararr_count++
 		default:
 			/* 10xx xxxx,  1111 xxxx */
-			panic(fmt.Errorf("malformed input around byte %v", count))
+			count += 6
+			if count > utflen {
+				panic("malformed input: partial character at end")
+			}
+			char5 := uint16(bytearr[count-5])
+			char4 := uint16(bytearr[count-4])
+			char3 := uint16(bytearr[count-3])
+			char2 := uint16(bytearr[count-2])
+			char1 := uint16(bytearr[count-1])
+			if c != 0xED || char1&0xF0 != 0xA0 || char2&0xC0 != 0x80 || char3 != 0xED || char4&0xF0 != 0xB0 || char5&0x60 != 0x80 {
+				panic(fmt.Errorf("malformed input around byte %v", (count - 1)))
+			}
+			chararr[chararr_count] = 0x0001
+			chararr[chararr_count+1] = 0x0000 | ((char1 & 0x0F) << 16) | ((char2 & 0x3F) << 10) | ((char4 & 0x0F) << 6) | (char5 & 0x3f)
+			chararr_count += 2
 		}
 	}
 	// The number of chars produced may be less than utflen

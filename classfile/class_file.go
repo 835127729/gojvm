@@ -57,11 +57,13 @@ func (self *ClassFile) read(reader *ClassReader) {
 	self.readAndCheckMagic(reader)
 	self.readAndCheckVersion(reader)
 	self.constantPool = readConstantPool(reader)
-	self.accessFlags = reader.readUint16()
+	self.readAccessFlags(reader)
 	self.thisClass = reader.readUint16()
 	self.superClass = reader.readUint16()
 	self.interfaces = reader.readUint16s()
+	fmt.Println("****************field****************")
 	self.fields = readMembers(reader, self.constantPool)
+	fmt.Println("****************method****************")
 	self.methods = readMembers(reader, self.constantPool)
 	self.attributes = readAttributes(reader, self.constantPool)
 }
@@ -86,6 +88,25 @@ func (self *ClassFile) readAndCheckVersion(reader *ClassReader) {
 	}
 
 	panic("java.lang.UnsupportedClassVersionError!")
+}
+
+func (self *ClassFile) readAccessFlags(reader *ClassReader) {
+	accessFlags := reader.readUint16()
+
+	if 0 != accessFlags&0x0200 { //如果是接口
+		if 0 == accessFlags&0x0400 && 0 != accessFlags&0x0010 && 0 != accessFlags&0x0020 && 0 != accessFlags&0x4000 {
+			panic("java.lang.UnAccessFlagsError!")
+		}
+	}
+	if 0 != accessFlags&0x2000 { //如果是注解类型
+		if 0 == accessFlags&0x0200 {
+			panic("java.lang.UnAccessFlagsError!")
+		}
+	}
+	if 0 != accessFlags&0x0010 && 0 != accessFlags&0x0400 { //final和abstract不能兼容
+		panic("java.lang.UnAccessFlagsError!")
+	}
+	self.accessFlags = accessFlags
 }
 
 func (self *ClassFile) MinorVersion() uint16 {

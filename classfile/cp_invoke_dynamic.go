@@ -16,6 +16,9 @@ func (self *ConstantMethodHandleInfo) readInfo(reader *ClassReader) {
 	self.referenceKind = reader.readUint8()
 	self.referenceIndex = reader.readUint16()
 }
+func (self *ConstantMethodHandleInfo) toString() string {
+	return "MethodHandle"
+}
 
 /*
 CONSTANT_MethodType_info {
@@ -29,6 +32,9 @@ type ConstantMethodTypeInfo struct {
 
 func (self *ConstantMethodTypeInfo) readInfo(reader *ClassReader) {
 	self.descriptorIndex = reader.readUint16()
+}
+func (self *ConstantMethodTypeInfo) toString() string {
+	return "MethodType"
 }
 
 /*
@@ -46,4 +52,7 @@ type ConstantInvokeDynamicInfo struct {
 func (self *ConstantInvokeDynamicInfo) readInfo(reader *ClassReader) {
 	self.bootstrapMethodAttrIndex = reader.readUint16()
 	self.nameAndTypeIndex = reader.readUint16()
+}
+func (self *ConstantInvokeDynamicInfo) toString() string {
+	return "InvokeDynamic"
 }

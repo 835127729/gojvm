@@ -1,5 +1,9 @@
 package classfile
 
+import (
+	"fmt"
+)
+
 var (
 	_attrDeprecated = &DeprecatedAttribute{}
 	_attrSynthetic  = &SyntheticAttribute{}
@@ -19,9 +23,13 @@ type AttributeInfo interface {
 func readAttributes(reader *ClassReader, cp ConstantPool) []AttributeInfo {
 	attributesCount := reader.readUint16()
 	attributes := make([]AttributeInfo, attributesCount)
+	fmt.Println("--------------------")
+	fmt.Println(attributesCount)
 	for i := range attributes {
 		attributes[i] = readAttribute(reader, cp)
 	}
+	fmt.Println("len:", len(attributes))
+	fmt.Println("--------------------")
 	return attributes
 }
 
@@ -35,6 +43,7 @@ func readAttribute(reader *ClassReader, cp ConstantPool) AttributeInfo {
 }
 
 func newAttributeInfo(attrName string, attrLen uint32, cp ConstantPool) AttributeInfo {
+	fmt.Println(attrName)
 	switch attrName {
 	// case "AnnotationDefault":
 	case "BootstrapMethods":
@@ -42,7 +51,7 @@ func newAttributeInfo(attrName string, attrLen uint32, cp ConstantPool) Attribut
 	case "Code":
 		return &CodeAttribute{cp: cp}
 	case "ConstantValue":
-		return &ConstantValueAttribute{}
+		return &ConstantValueAttribute{cp: cp}
 	case "Deprecated":
 		return _attrDeprecated
 	case "EnclosingMethod":
@@ -68,8 +77,9 @@ func newAttributeInfo(attrName string, attrLen uint32, cp ConstantPool) Attribut
 		return &SignatureAttribute{cp: cp}
 	case "SourceFile":
 		return &SourceFileAttribute{cp: cp}
-	// case "SourceDebugExtension":
-	// case "StackMapTable":
+		// case "SourceDebugExtension":
+	case "StackMapTable":
+		return &StackMapTableAttribute{cp: cp, attributeLength: attrLen}
 	case "Synthetic":
 		return _attrSynthetic
 	default:

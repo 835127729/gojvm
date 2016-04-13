@@ -1,6 +1,8 @@
 package heap
 
-import "fmt"
+import (
+	"fmt"
+)
 import "gojvm/classfile"
 import "gojvm/classpath"
 
@@ -30,18 +32,24 @@ func NewClassLoader(cp *classpath.Classpath, verboseFlag bool) *ClassLoader {
 }
 
 func (self *ClassLoader) loadBasicClasses() {
-	jlClassClass := self.LoadClass("java/lang/Class")
+	jlClassClass := self.LoadClass(jlClassClassName)
+	self.LoadClass(jlObjectClassName)
 	for _, class := range self.classMap {
 		if class.jClass == nil {
 			class.jClass = jlClassClass.NewObject()
 			class.jClass.extra = class
 		}
 	}
+	self.LoadClass(jlStringClassName)
+	self.LoadClass(jlThreadClassName)
+	self.LoadClass(jlCloneableClassName)
+	self.LoadClass(ioSerializableClassName)
 }
 
 func (self *ClassLoader) loadPrimitiveClasses() {
-	for primitiveType, _ := range primitiveTypes {
-		self.loadPrimitiveClass(primitiveType)
+	for _, primitiveType := range primitiveTypes {
+		self.loadPrimitiveClass(primitiveType.Name)
+		self.LoadClass(primitiveType.WrapperClassName)
 	}
 }
 
@@ -52,7 +60,26 @@ func (self *ClassLoader) loadPrimitiveClass(className string) {
 		loader:      self,
 		initStarted: true,
 	}
-	class.jClass = self.classMap["java/lang/Class"].NewObject()
+	class.jClass = self.LoadClass(jlClassClassName).NewObject()
+	class.jClass.extra = class
+	self.classMap[className] = class
+}
+
+func (self *ClassLoader) loadPrimitiveArrayClasses() {
+	for _, primitiveType := range primitiveTypes {
+		self.loadPrimitiveArrayClass(primitiveType.ArrayClassName)
+		self.loadArrayClass(getArrayClassName(primitiveType.WrapperClassName))
+	}
+}
+
+func (self *ClassLoader) loadPrimitiveArrayClass(className string) {
+	class := &Class{
+		AccessFlags: AccessFlags{ACC_PUBLIC}, // todo
+		name:        className,
+		loader:      self,
+		initStarted: true,
+	}
+	class.jClass = self.LoadClass(jlClassClassName).NewObject()
 	class.jClass.extra = class
 	self.classMap[className] = class
 }
@@ -196,6 +223,7 @@ func calcStaticFieldSlotIds(class *Class) {
 	class.staticSlotCount = slotId
 }
 
+//初始化静态变量
 func allocAndInitStaticVars(class *Class) {
 	class.staticVars = newSlots(class.staticSlotCount)
 	for _, field := range class.fields {

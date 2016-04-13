@@ -556,10 +556,10 @@ func NewInstruction(opcode byte) base.Instruction {
 		return &CHECK_CAST{}
 	case 0xc1:
 		return &INSTANCE_OF{}
-	// case 0xc2:
-	// 	return monitorenter
-	// case 0xc3:
-	// 	return monitorexit
+	case 0xc2:
+		return &MONITOR_ENTER{}
+	case 0xc3:
+		return &MONITOR_EXIT{}
 	case 0xc4:
 		return &WIDE{}
 	case 0xc5:

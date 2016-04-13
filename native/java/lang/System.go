@@ -1,6 +1,9 @@
 package lang
 
-import "gojvm/native"
+import (
+	"gojvm/native"
+	"unsafe"
+)
 import "gojvm/rtda"
 import "gojvm/rtda/heap"
 
@@ -8,6 +11,7 @@ const jlSystem = "java/lang/System"
 
 func init() {
 	native.Register(jlSystem, "arraycopy", "(Ljava/lang/Object;ILjava/lang/Object;II)V", arraycopy)
+	native.Register(jlSystem, "identityHashCode", "(Ljava/lang/Object;)I", identityHashCode)
 }
 
 // public static native void arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
@@ -47,4 +51,16 @@ func checkArrayCopy(src, dest *heap.Object) bool {
 		return srcClass == destClass
 	}
 	return true
+}
+
+// public static native int identityHashCode(Object x);
+// (Ljava/lang/Object;)I
+func identityHashCode(frame *rtda.Frame) {
+	vars := frame.LocalVars()
+	ref := vars.GetRef(0)
+
+	// todo
+	hashCode := int32(uintptr(unsafe.Pointer(ref)))
+	stack := frame.OperandStack()
+	stack.PushInt(hashCode)
 }

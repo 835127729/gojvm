@@ -38,3 +38,15 @@ func (self *ConstantMemberrefInfo) ClassName() string {
 func (self *ConstantMemberrefInfo) NameAndDescriptor() (string, string) {
 	return self.cp.getNameAndType(self.nameAndTypeIndex)
 }
+func (self *ConstantMemberrefInfo) toString() string {
+	return "Memberref"
+}
+func (self *ConstantFieldrefInfo) toString() string {
+	return "Fieldref"
+}
+func (self *ConstantMethodrefInfo) toString() string {
+	return "Methodref"
+}
+func (self *ConstantInterfaceMethodrefInfo) toString() string {
+	return "InterfaceMethodref"
+}
