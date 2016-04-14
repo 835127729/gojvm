@@ -63,7 +63,7 @@ func newAttributeInfo(attrName string, attrLen uint32, cp ConstantPool) Attribut
 	case "LineNumberTable":
 		return &LineNumberTableAttribute{}
 	case "LocalVariableTable":
-		return &LocalVariableTableAttribute{}
+		return &LocalVariableTableAttribute{cp: cp}
 	case "LocalVariableTypeTable":
 		return &LocalVariableTypeTableAttribute{}
 	// case "MethodParameters":

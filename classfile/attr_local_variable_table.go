@@ -14,10 +14,12 @@ LocalVariableTable_attribute {
 }
 */
 type LocalVariableTableAttribute struct {
+	cp                 ConstantPool
 	localVariableTable []*LocalVariableTableEntry
 }
 
 type LocalVariableTableEntry struct {
+	cp              ConstantPool
 	startPc         uint16
 	length          uint16
 	nameIndex       uint16
@@ -25,11 +27,20 @@ type LocalVariableTableEntry struct {
 	index           uint16
 }
 
+func (self *LocalVariableTableEntry) Name() string {
+	return self.cp.getUtf8(self.nameIndex)
+}
+
+func (self *LocalVariableTableEntry) Descriptor() string {
+	return self.cp.getUtf8(self.descriptorIndex)
+}
+
 func (self *LocalVariableTableAttribute) readInfo(reader *ClassReader) {
 	localVariableTableLength := reader.readUint16()
 	self.localVariableTable = make([]*LocalVariableTableEntry, localVariableTableLength)
 	for i := range self.localVariableTable {
 		self.localVariableTable[i] = &LocalVariableTableEntry{
+			cp:              self.cp,
 			startPc:         reader.readUint16(),
 			length:          reader.readUint16(),
 			nameIndex:       reader.readUint16(),

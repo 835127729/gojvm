@@ -806,8 +806,19 @@ func printCode(codeAttribute *CodeAttribute) {
 			panic(fmt.Errorf("Unsupported opcode: 0x%x!", code))
 		}
 	}
+	printLineNumberTableAttribute(codeAttribute.LineNumberTableAttribute())
 	printLocalVariableTableAttribute(codeAttribute.LocalVariableTableAttribute())
 	printStackMapTable(codeAttribute.StackMapTableAttribute())
+}
+
+func printLineNumberTableAttribute(table *LineNumberTableAttribute) {
+	if table == nil {
+		return
+	}
+	fmt.Println("     LineNumberTable:")
+	for _, entry := range table.lineNumberTable {
+		fmt.Println("		line", entry.lineNumber, ":", entry.startPc)
+	}
 }
 
 func printLocalVariableTableAttribute(table *LocalVariableTableAttribute) {
@@ -815,6 +826,10 @@ func printLocalVariableTableAttribute(table *LocalVariableTableAttribute) {
 		return
 	}
 	fmt.Println("     LocalVariableTable:")
+	fmt.Println("     	Start	Length	Slot	Name	Signature:")
+	for _, entry := range table.localVariableTable {
+		fmt.Println("     	", entry.startPc, "	", entry.length, "	", entry.index, "	", entry.Name(), "	", entry.Descriptor())
+	}
 }
 
 func printStackMapTable(table *StackMapTableAttribute) {
@@ -872,10 +887,6 @@ func printStackMapTable(table *StackMapTableAttribute) {
 
 func printVerificationTypeInfos(infos []VerificationTypeInfo) {
 	for _, info := range infos {
-		fmt.Print(printVerificationTypeInfo(info), ",")
+		fmt.Print(info.name(), ",")
 	}
-}
-
-func printVerificationTypeInfo(info VerificationTypeInfo) string {
-	return info.name()
 }
