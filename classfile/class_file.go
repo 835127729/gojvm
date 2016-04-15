@@ -61,9 +61,7 @@ func (self *ClassFile) read(reader *ClassReader) {
 	self.thisClass = reader.readUint16()
 	self.superClass = reader.readUint16()
 	self.interfaces = reader.readUint16s()
-	fmt.Println("****************field****************")
 	self.fields = readMembers(reader, self.constantPool)
-	fmt.Println("****************method****************")
 	self.methods = readMembers(reader, self.constantPool)
 	self.attributes = readAttributes(reader, self.constantPool)
 }

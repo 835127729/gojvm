@@ -1,9 +1,5 @@
 package classfile
 
-import (
-	"fmt"
-)
-
 /*
 field_info {
     u2             access_flags;
@@ -32,13 +28,9 @@ type MemberInfo struct {
 // read field or method table
 func readMembers(reader *ClassReader, cp ConstantPool) []*MemberInfo {
 	memberCount := reader.readUint16()
-	fmt.Println("memberCount:", memberCount)
 	members := make([]*MemberInfo, memberCount)
 	for i := range members {
-		fmt.Println("第", i, "个方法")
 		members[i] = readMember(reader, cp)
-		fmt.Println("属性数目:", len(members[i].attributes))
-		fmt.Println()
 	}
 	return members
 }

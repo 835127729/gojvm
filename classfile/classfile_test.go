@@ -306,7 +306,6 @@ func printMethods(methods []*MemberInfo) {
 		fmt.Println(" **method**", method.Name())
 		fmt.Println("    descriptor:", method.Descriptor())
 		printMethodFlags(method.accessFlags)
-		fmt.Println(len(method.attributes))
 		printCode(method.CodeAttribute())
 	}
 }
@@ -806,13 +805,25 @@ func printCode(codeAttribute *CodeAttribute) {
 			panic(fmt.Errorf("Unsupported opcode: 0x%x!", code))
 		}
 	}
+	printExceptionsAttribute(codeAttribute.exceptionTable, codeAttribute.cp)
 	printLineNumberTableAttribute(codeAttribute.LineNumberTableAttribute())
 	printLocalVariableTableAttribute(codeAttribute.LocalVariableTableAttribute())
 	printStackMapTable(codeAttribute.StackMapTableAttribute())
 }
 
+func printExceptionsAttribute(table []*ExceptionTableEntry, cp ConstantPool) {
+	if table == nil || len(table) == 0 {
+		return
+	}
+	fmt.Println("     Exception table:")
+	fmt.Println("     	from    to	target	type")
+	for _, entry := range table {
+		fmt.Println("     	", entry.startPc, "	", entry.endPc, "	", entry.handlerPc, "	", cp.getClassName(entry.catchType))
+	}
+}
+
 func printLineNumberTableAttribute(table *LineNumberTableAttribute) {
-	if table == nil {
+	if table == nil || len(table.lineNumberTable) == 0 {
 		return
 	}
 	fmt.Println("     LineNumberTable:")
@@ -822,7 +833,7 @@ func printLineNumberTableAttribute(table *LineNumberTableAttribute) {
 }
 
 func printLocalVariableTableAttribute(table *LocalVariableTableAttribute) {
-	if table == nil {
+	if table == nil || len(table.localVariableTable) == 0 {
 		return
 	}
 	fmt.Println("     LocalVariableTable:")
@@ -833,7 +844,7 @@ func printLocalVariableTableAttribute(table *LocalVariableTableAttribute) {
 }
 
 func printStackMapTable(table *StackMapTableAttribute) {
-	if table == nil {
+	if table == nil || len(table.entries) == 0 {
 		return
 	}
 	fmt.Println("     StackMapTable: number_of_entries = :", len(table.entries))

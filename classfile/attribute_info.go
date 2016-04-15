@@ -1,9 +1,5 @@
 package classfile
 
-import (
-	"fmt"
-)
-
 var (
 	_attrDeprecated = &DeprecatedAttribute{}
 	_attrSynthetic  = &SyntheticAttribute{}
@@ -23,13 +19,9 @@ type AttributeInfo interface {
 func readAttributes(reader *ClassReader, cp ConstantPool) []AttributeInfo {
 	attributesCount := reader.readUint16()
 	attributes := make([]AttributeInfo, attributesCount)
-	fmt.Println("--------------------")
-	fmt.Println(attributesCount)
 	for i := range attributes {
 		attributes[i] = readAttribute(reader, cp)
 	}
-	fmt.Println("len:", len(attributes))
-	fmt.Println("--------------------")
 	return attributes
 }
 
@@ -43,7 +35,6 @@ func readAttribute(reader *ClassReader, cp ConstantPool) AttributeInfo {
 }
 
 func newAttributeInfo(attrName string, attrLen uint32, cp ConstantPool) AttributeInfo {
-	fmt.Println(attrName)
 	switch attrName {
 	// case "AnnotationDefault":
 	case "BootstrapMethods":
@@ -66,18 +57,24 @@ func newAttributeInfo(attrName string, attrLen uint32, cp ConstantPool) Attribut
 		return &LocalVariableTableAttribute{cp: cp}
 	case "LocalVariableTypeTable":
 		return &LocalVariableTypeTableAttribute{}
+	case "RuntimeVisibleAnnotations":
+		return &RuntimeVisibleAnnotationsAttribute{}
+	case "RuntimeInvisibleAnnotations":
+		return &RuntimeInvisibleAnnotationsAttribute{}
+	case "RuntimeVisibleParameterAnnotations":
+		return &RuntimeVisibleParammeterAnnotationsAttribute{}
+	case "AnnotationDefaulte":
+		return &AnnotationDefaultAttribute{}
 	// case "MethodParameters":
-	// case "RuntimeInvisibleAnnotations":
-	// case "RuntimeInvisibleParameterAnnotations":
 	// case "RuntimeInvisibleTypeAnnotations":
-	// case "RuntimeVisibleAnnotations":
-	// case "RuntimeVisibleParameterAnnotations":
+
 	// case "RuntimeVisibleTypeAnnotations":
 	case "Signature":
 		return &SignatureAttribute{cp: cp}
 	case "SourceFile":
 		return &SourceFileAttribute{cp: cp}
-		// case "SourceDebugExtension":
+	case "SourceDebugExtension":
+		return &SourceDebugExtensionAttribute{}
 	case "StackMapTable":
 		return &StackMapTableAttribute{cp: cp, attributeLength: attrLen}
 	case "Synthetic":

@@ -1,15 +1,11 @@
 package classfile
 
-import (
-	"fmt"
-)
-
 /*
 StackMapTable_attribute {
     u2 attribute_name_index;
     u4 attribute_length;
-    u2 number_of_exceptions;
-    u2 exception_index_table[number_of_exceptions];
+    u2 number_of_entries;
+    stack_map_frame entries[number_of_entries];
 }
 */
 type StackMapTableAttribute struct {
@@ -189,7 +185,6 @@ func (self *StackMapTableAttribute) readInfo(reader *ClassReader) {
 
 func (self *StackMapTableAttribute) readStackMapFrame(reader *ClassReader) StackMapFrame {
 	tag := reader.readUint8()
-	fmt.Println(tag)
 	if tag >= 0 && tag < 64 {
 		return &SameFrame{frameType: tag}
 	} else if tag >= 64 && tag < 128 {
